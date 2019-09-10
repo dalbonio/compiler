@@ -25,6 +25,7 @@ void yyerror(string);
 %token TK_NUM
 %token TK_MAIN TK_ID TK_TIPO_INT
 %token TK_FIM TK_ERROR
+%token TK_FIM_LINHA
 
 %start S
 
@@ -33,15 +34,15 @@ void yyerror(string);
 
 %%
 
-S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
+S 			: BLOCO
 			{
-				cout << "/*Compilador FOCA*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << $5.traducao << "\treturn 0;\n}" << endl;
+				cout << "/*Compilador FOCA*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << $1.traducao << "\treturn 0;\n}" << endl;
 			}
 			;
 
-BLOCO		: '{' COMANDOS '}'
+BLOCO		: COMANDOS
 			{
-				$$.traducao = $2.traducao;
+				$$.traducao = $1.traducao;
 			}
 			;
 
@@ -50,7 +51,7 @@ COMANDOS	: COMANDO COMANDOS { $$.label = ""; $$.traducao = $1.traducao + $2.trad
 			| {$$.label = ""; $$.traducao = "";}
 			;
 
-COMANDO 	: E ';' {$$.traducao = $1.traducao;}
+COMANDO 	: E TK_FIM_LINHA {$$.traducao = $1.traducao;}
 			;
 
 E 			: E '+' E
