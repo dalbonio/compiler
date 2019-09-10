@@ -25,6 +25,7 @@ void yyerror(string);
 %token TK_NUM
 %token TK_MAIN TK_ID TK_TIPO_INT
 %token TK_FIM TK_ERROR
+%token TK_FIM_LINHA
 
 %start S
 
@@ -33,23 +34,24 @@ void yyerror(string);
 
 %%
 
-S 			: TK_TIPO_INT TK_MAIN '(' ')' BLOCO
+S 			: BLOCO
 			{
-				cout << "/*Compilador FOCA*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << $5.traducao << "\treturn 0;\n}" << endl;
+				cout << "/*Compilador FOCA*/\n" << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\nint main(void)\n{\n" << $1.traducao << "\treturn 0;\n}" << endl;
 			}
 			;
 
-BLOCO		: '{' COMANDOS '}'
+BLOCO		: COMANDOS
 			{
-				$$.traducao = $2.traducao;
+				$$.traducao = $1.traducao;
 			}
 			;
 
-COMANDOS	: COMANDO COMANDOS { $$.traducao = $1.traducao + $2.traducao; }
-			|
+COMANDOS	: COMANDO COMANDOS { $$.label = ""; $$.traducao = $1.traducao + $2.traducao; /*cout << "---" + $2.traducao + "---\n" */;}
+			//| COMANDO
+			| {$$.label = ""; $$.traducao = "";}
 			;
 
-COMANDO 	: E ';'
+COMANDO 	: E TK_FIM_LINHA {$$.traducao = $1.traducao;}
 			;
 
 E 			: E '+' E
@@ -80,6 +82,12 @@ E 			: E '+' E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " / " + $3.label + ";\n";
 
 			}
+			| TK_ID '=' E
+			{
+				$$.resultado = $1.resultado;
+				$$.label = label_generator();
+				$$.traducao = $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+			}
 			| TK_NUM
 			{
 				$$.resultado = stoi($1.traducao);
@@ -87,6 +95,11 @@ E 			: E '+' E
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
 			}
 			| TK_ID
+			{
+				$$.label = label_generator();
+				$$.traducao = "";
+				$$.resultado = 0;
+			}
 			;
 
 %%
