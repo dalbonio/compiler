@@ -105,7 +105,6 @@ E 			: E '+' E
 			| TK_ID
 			{
 				$$.label = $1.label;
-				verify_label($1.label);
 				$$.traducao = "";
 				$$.resultado = 0;
 			}
