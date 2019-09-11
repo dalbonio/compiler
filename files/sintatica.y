@@ -2,10 +2,16 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <iterator>
+#include <unordered_map>
+#include <map>
 
 #define YYSTYPE atributos
 
 using namespace std;
+
+unordered_map<string, string> var_umap;
+
 
 struct atributos
 {
@@ -20,6 +26,8 @@ int tokenContador = 0;
 string label_generator();
 int yylex(void);
 void yyerror(string);
+string get_id_label(string user_label);
+
 %}
 
 %token TK_NUM
@@ -96,7 +104,8 @@ E 			: E '+' E
 			}
 			| TK_ID
 			{
-				$$.label = label_generator();
+				$$.label = $1.label;
+				verify_label($1.label);
 				$$.traducao = "";
 				$$.resultado = 0;
 			}
@@ -124,4 +133,16 @@ void yyerror( string MSG )
 string label_generator()
 {
 	return string("temp") + to_string(tokenContador++);
+}
+
+string get_id_label(string user_label)
+{
+	if(var_umap.find(user_label) == var_umap.end())
+	{
+		string new_label = label_generator();
+		var_umap[user_label] = new_label;
+		return new_label;
+	}
+
+	return var_umap[user_label];
 }
