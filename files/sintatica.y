@@ -31,9 +31,14 @@ string get_id_label(string user_label);
 %}
 
 %token TK_NUM
-%token TK_MAIN TK_ID TK_TIPO_INT
+
+%token TK_MAIN TK_END
+%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE
+%token TK_FOR TK_WHILE TK_IF
+
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
+
 
 %start S
 
