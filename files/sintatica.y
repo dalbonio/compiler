@@ -12,16 +12,8 @@ using namespace std;
 
 struct variavel
 {
-	string name;
 	string tipo;
 };
-
-struct temporaria
-{
-	string tipo;
-};
-
-
 
 struct atributos
 {
@@ -31,8 +23,8 @@ struct atributos
 	string tipo;
 };
 
-unordered_map<string, variavel> var_umap;
-unordered_map<string, temporaria> temp_umap;
+unordered_map<string, string> var_umap;
+unordered_map<string, variavel> temp_umap;
 
 int tokenContador = 0;
 
@@ -47,7 +39,7 @@ string declare_variables();
 %token TK_NUM TK_REAL
 
 %token TK_MAIN TK_END
-%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE TK_TIPO_FLOAT TK_TIPO_CHAR 
+%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE TK_TIPO_FLOAT TK_TIPO_CHAR
 %token TK_FOR TK_WHILE TK_IF
 
 %token TK_FIM TK_ERROR
@@ -78,31 +70,31 @@ BLOCO		: COMANDOS
 			}
 			;
 
-COMANDOS	: COMANDO COMANDOS 
-			{ 
-				$$.label = ""; 
+COMANDOS	: COMANDO COMANDOS
+			{
+				$$.label = "";
 				$$.traducao = $1.traducao + $2.traducao;
 			}
 			| //vazio
 			{
-				$$.label = ""; 
+				$$.label = "";
 				$$.traducao = "";
 			}
 			;
 
-COMANDO 	: E TK_FIM_LINHA 
+COMANDO 	: E TK_FIM_LINHA
 			{
 				$$.traducao = $1.traducao;
-			}			
+			}
 			;
 
 E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = $1.resultado + $3.resultado;
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " + " + $3.label + ";\n";
 
@@ -111,9 +103,9 @@ E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = $1.resultado - $3.resultado;
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " - " + $3.label + ";\n";
 
@@ -122,9 +114,9 @@ E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = $1.resultado * $3.resultado;
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " * " + $3.label + ";\n";
 
@@ -133,9 +125,9 @@ E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = $1.resultado / $3.resultado;
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " / " + $3.label + ";\n";
 
@@ -143,11 +135,9 @@ E 			: E '+' E
 			| TK_ID '=' E
 			{
 				$$.tipo = $3.tipo;
-				var_umap[$1.traducao].tipo = $3.tipo;
-				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
+				$$.label = $1.label;
+
 				$$.resultado = $1.resultado;
 				$$.traducao = $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
 			}
@@ -155,9 +145,9 @@ E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = stoi($1.traducao);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
 			}
@@ -165,15 +155,15 @@ E 			: E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
-				temporaria t;
-				t.tipo = $$.tipo;
-				temp_umap[$$.label] = t;
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
 				$$.resultado = stoi($1.traducao);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
 			}
 			| TK_ID
 			{
-				$$.tipo = var_umap[$1.traducao].tipo;
+				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
 				$$.label = $1.label;
 				$$.traducao = "";
 				$$.resultado = 0;
@@ -208,19 +198,12 @@ string declare_variables()
 {
 	string total = string("");
 
-	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++) 
+	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++)
 	{
-		total += "\t" + it->second.tipo + " " + it->first + ";\n"; 
+		total += "\t" + it->second.tipo + " " + it->first + ";\n";
 	}
 
-	total += "\n\n";
-
-	for(auto it=var_umap.begin(); it!=var_umap.end(); it++) 
-	{
-		total += "\t" + it->second.tipo + " " + it->second.name + ";\n"; 
-	}
-
-	total += "\n\n";
+	total += "\n";
 
 	return total;
 }
@@ -242,11 +225,12 @@ string get_id_label(string user_label)
 	{
 		string new_label = label_generator();
 		variavel new_var;
-		new_var.name = new_label;
 
-		var_umap[user_label] = new_var;
+		var_umap[user_label] = new_label;
+		temp_umap[new_label] = new_var;
+
 		return new_label;
 	}
 
-	return var_umap[user_label].name;
+	return var_umap[user_label];
 }
