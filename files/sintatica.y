@@ -5,6 +5,8 @@
 #include <iterator>
 #include <unordered_map>
 #include <map>
+#include <queue>
+#include <stack>
 
 #define YYSTYPE atributos
 
@@ -25,6 +27,9 @@ struct atributos
 
 unordered_map<string, string> var_umap;
 unordered_map<string, variavel> temp_umap;
+
+queue <atributos> multiple_atr_queue;
+stack <atributos> multiple_atr_stack;
 
 int tokenContador = 0;
 
@@ -85,6 +90,45 @@ COMANDOS	: COMANDO COMANDOS
 COMANDO 	: E TK_FIM_LINHA
 			{
 				$$.traducao = $1.traducao;
+			}
+			| TK_ID ',' REC_ATR ',' E TK_FIM_LINHA
+			{
+				multiple_atr_queue.push($1);
+				multiple_atr_stack.push($5);
+
+				string local_traducao = "";
+				while(!multiple_atr_queue.empty() || !multiple_atr_stack.empty() )
+				{
+					atributos var = multiple_atr_queue.front();
+					atributos exp = multiple_atr_stack.top();
+
+					temp_umap[var.label].tipo = exp.tipo;
+
+					local_traducao += "\t" + var.label + " = " + exp.label + ";\n";
+
+					multiple_atr_queue.pop();
+					multiple_atr_stack.pop();
+				}
+
+				/*if( multiple_atr_queue.empty() && multiple_atr_stack.empty() )
+				{
+					while( !multiple_atr_queue.empty() )
+					{
+						multiple_atr_queue.pop()
+					}
+
+					while( !multiple_atr_stack.empty() )
+					{
+						multiple_atr_stack.pop()
+					}
+
+					cout << "erro atribuicao multipla";
+					$$.traducao = $3.traducao + $5.traducao;
+				}*/
+				//else
+				{
+					$$.traducao = $3.traducao + $5.traducao + local_traducao;
+				}
 			}
 			;
 
@@ -170,6 +214,24 @@ E 			: E '+' E
 			}
 			;
 
+REC_ATR		: TK_ID ',' REC_ATR ',' E
+			{
+				multiple_atr_queue.push($1);
+				multiple_atr_stack.push($5);
+
+				//$$.label = label_generator();
+				$$.traducao = $3.traducao + $5.traducao;
+			}
+			| TK_ID '=' E
+			{
+				$$.label = "";
+				$$.traducao = $3.traducao;
+
+				multiple_atr_queue.push($1);
+				multiple_atr_stack.push($3);
+			}
+			;
+
 %%
 
 #include "lex.yy.c"
@@ -197,6 +259,13 @@ string label_generator()
 string declare_variables()
 {
 	string total = string("");
+
+	for(auto it=var_umap.begin(); it!=var_umap.end(); it++)
+	{
+		total += "\t//" + it->first + "=" + it->second + "\n";
+	}
+
+	total += "\n";
 
 	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++)
 	{
