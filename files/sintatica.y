@@ -14,6 +14,7 @@ using namespace std;
 
 struct variavel
 {
+	string user_label;
 	string tipo;
 };
 
@@ -328,7 +329,8 @@ string get_id_label(string user_label)
 	{
 		string new_label = label_generator();
 		variavel new_var;
-
+		new_var.user_label = user_label;
+		
 		var_umap[user_label] = new_label;
 		temp_umap[new_label] = new_var;
 
