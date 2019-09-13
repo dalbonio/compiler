@@ -28,8 +28,8 @@ struct atributos
 unordered_map<string, string> var_umap;
 unordered_map<string, variavel> temp_umap;
 
-queue <atributos> multiple_atr_queue;
-stack <atributos> multiple_atr_stack;
+queue <string> multiple_atr_queue;
+stack <pair<string, string>> multiple_atr_stack;
 
 int tokenContador = 0;
 
@@ -80,7 +80,12 @@ COMANDOS	: COMANDO COMANDOS
 				$$.label = "";
 				$$.traducao = $1.traducao + $2.traducao;
 			}
-			| //vazio
+			| TK_FIM_LINHA COMANDOS
+			{
+				$$.label = "";
+				$$.traducao = "";
+			}
+			| //REGRA VAZIA
 			{
 				$$.label = "";
 				$$.traducao = "";
@@ -93,18 +98,27 @@ COMANDO 	: E TK_FIM_LINHA
 			}
 			| TK_ID ',' REC_ATR ',' E TK_FIM_LINHA
 			{
-				multiple_atr_queue.push($1);
-				multiple_atr_stack.push($5);
+				string newlabel = label_generator();
+				variavel v;
+				v.tipo = $5.tipo;
+				temp_umap[newlabel] = v;
 
-				string local_traducao = "";
+				pair<string, string> pair_exp;
+				pair_exp.first = newlabel;
+				pair_exp.second = $5.tipo;
+
+				multiple_atr_queue.push($1.label);
+				multiple_atr_stack.push(pair_exp);
+
+				string local_traducao = "\t" + newlabel + " = " + $5.label + ";\n";
 				while(!multiple_atr_queue.empty() || !multiple_atr_stack.empty() )
 				{
-					atributos var = multiple_atr_queue.front();
-					atributos exp = multiple_atr_stack.top();
+					string var = multiple_atr_queue.front();
+					pair<string, string> exp = multiple_atr_stack.top();
 
-					temp_umap[var.label].tipo = exp.tipo;
+					temp_umap[var].tipo = exp.second;
 
-					local_traducao += "\t" + var.label + " = " + exp.label + ";\n";
+					local_traducao += "\t" + var + " = " + exp.first + ";\n";
 
 					multiple_atr_queue.pop();
 					multiple_atr_stack.pop();
@@ -216,19 +230,39 @@ E 			: E '+' E
 
 REC_ATR		: TK_ID ',' REC_ATR ',' E
 			{
-				multiple_atr_queue.push($1);
-				multiple_atr_stack.push($5);
+				//create $5 copy to multiple assignment
+				string newlabel = label_generator();
+				variavel v;
+				v.tipo = $5.tipo;
+				temp_umap[newlabel] = v;
+
+				pair<string, string> pair_exp;
+				pair_exp.first = newlabel;
+				pair_exp.second = $5.tipo;
+
+				multiple_atr_queue.push($1.label);
+				multiple_atr_stack.push(pair_exp);
 
 				//$$.label = label_generator();
-				$$.traducao = $3.traducao + $5.traducao;
+				$$.traducao = $3.traducao + $5.traducao + "\t" + newlabel + " = " + $5.label + ";\n";
 			}
 			| TK_ID '=' E
 			{
-				$$.label = "";
-				$$.traducao = $3.traducao;
+				//make copy of $3
+				string newlabel = label_generator();
+				variavel v;
+				v.tipo = $3.tipo;
+				temp_umap[newlabel] = v;
 
-				multiple_atr_queue.push($1);
-				multiple_atr_stack.push($3);
+				pair<string, string> pair_exp;
+				pair_exp.first = newlabel;
+				pair_exp.second = $3.tipo;
+
+				$$.label = "";
+				$$.traducao = $3.traducao + "\t" + newlabel + " = " + $3.label + ";\n";
+
+				multiple_atr_queue.push($1.label);
+				multiple_atr_stack.push(pair_exp);
 			}
 			;
 
