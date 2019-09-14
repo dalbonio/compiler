@@ -8,13 +8,27 @@ DIGITO [0-9]
 LETRA [A-Za-z_]
 STR \"([^\\\"]|\\.)*\"
 
+
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
 
+START "/*
+END "*/"
+SIMPLE [^*]
+SPACE [ \t\n]
+COMPLEX "*"[^/]
+%s newstate
+
 %%
+"//"(.*[ \t]*.*)*[\n]+    {}
+{START}                    {yymore();BEGIN newstate;}
+ <newstate>{SIMPLE}        {yymore();BEGIN newstate;}
+ <newstate>{COMPLEX}      {yymore();BEGIN newstate;}
+ <newstate>{SPACE}        {yymore();BEGIN newstate;}
+ <newstate>{END}  {}
 
 "\n"		{return TK_FIM_LINHA;}
 

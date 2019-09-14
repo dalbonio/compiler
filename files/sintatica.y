@@ -81,10 +81,10 @@ COMANDOS	: COMANDO COMANDOS
 				$$.label = "";
 				$$.traducao = $1.traducao + $2.traducao;
 			}
-			| TK_FIM_LINHA COMANDOS
+			| TK_FIM_LINHA COMANDOS	//poder pular linha qt quiser no codigo
 			{
 				$$.label = "";
-				$$.traducao = "";
+				$$.traducao = $2.traducao;
 			}
 			| //REGRA VAZIA
 			{
@@ -330,7 +330,7 @@ string get_id_label(string user_label)
 		string new_label = label_generator();
 		variavel new_var;
 		new_var.user_label = user_label;
-		
+
 		var_umap[user_label] = new_label;
 		temp_umap[new_label] = new_var;
 
