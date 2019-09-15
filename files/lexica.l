@@ -15,7 +15,7 @@ REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
 
-START "/*
+START "/*"
 END "*/"
 SIMPLE [^*]
 SPACE [ \t\n]
