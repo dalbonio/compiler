@@ -15,7 +15,7 @@ using namespace std;
 struct variavel
 {
 	string user_label;
-	string tipo;
+	int tipo;
 };
 
 struct atributos
@@ -23,14 +23,15 @@ struct atributos
 	string label;
 	string traducao;
 	int resultado;
-	string tipo;
+	int tipo;
 };
 
 unordered_map<string, string> var_umap;
 unordered_map<string, variavel> temp_umap;
+unordered_map<int, string> tipo_umap;
 
 queue <string> multiple_atr_queue;
-stack <pair<string, string>> multiple_atr_stack;
+stack <pair<string, int>> multiple_atr_stack;
 
 int tokenContador = 0;
 
@@ -39,14 +40,16 @@ int yylex(void);
 void yyerror(string);
 string get_id_label(string user_label);
 string declare_variables();
+void initialize_tipo_umap();
 
 %}
 
-%token TK_NUM TK_REAL
+%token TK_NUM TK_REAL TK_BOOL
 
 %token TK_MAIN TK_END
-%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE TK_TIPO_FLOAT TK_TIPO_CHAR
-%token TK_FOR TK_WHILE TK_IF
+%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE TK_TIPO_FLOAT TK_TIPO_CHAR TK_TIPO_BOOL
+%token TK_AND TK_OR TK_NOT TK_EQ TK_NEQ
+%token TK_FOR TK_WHILE TK_IF TK_GEQ TK_LEQ
 
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
@@ -104,7 +107,7 @@ COMANDO 	: E TK_FIM_LINHA
 				v.tipo = $5.tipo;
 				temp_umap[newlabel] = v;
 
-				pair<string, string> pair_exp;
+				pair<string, int> pair_exp;
 				pair_exp.first = newlabel;
 				pair_exp.second = $5.tipo;
 
@@ -115,7 +118,7 @@ COMANDO 	: E TK_FIM_LINHA
 				while(!multiple_atr_queue.empty() || !multiple_atr_stack.empty() )
 				{
 					string var = multiple_atr_queue.front();
-					pair<string, string> exp = multiple_atr_stack.top();
+					pair<string, int> exp = multiple_atr_stack.top();
 
 					temp_umap[var].tipo = exp.second;
 
@@ -191,6 +194,56 @@ E 			: E '+' E
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " / " + $3.label + ";\n";
 
 			}
+			| E '>' E
+			{
+				$$.tipo = BOOLEAN;
+				$$.label = label_generator();
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
+				//$$.resultado = $1.resultado / $3.resultado;
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " / " + $3.label + ";\n";				
+			}
+			| E '<' E
+			{
+				
+
+			}
+			| E TK_GEQ E
+			{
+		
+
+			}
+			| E TK_LEQ E
+			{
+				
+
+			}
+			| E TK_EQ E
+			{
+				
+
+			}
+			| E TK_NEQ E
+			{
+			
+
+			}
+			| TK_NOT E
+			{
+				
+
+			}
+			| E TK_AND E
+			{
+				
+
+			}
+			| E TK_OR E
+			{
+				
+
+			}
 			| TK_ID '=' E
 			{
 				$$.tipo = $3.tipo;
@@ -227,6 +280,25 @@ E 			: E '+' E
 				$$.traducao = "";
 				$$.resultado = 0;
 			}
+			| TK_BOOL
+			{
+				$$.tipo = $1.tipo;
+				$$.label = label_generator();
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
+				//$$.resultado = stoi($1.traducao);
+
+				$$.traducao = "\t" + $$.label + " = " + ($1.traducao == "true"? "1" : "0") + ";\n";
+				/*if ($1.traducao == "true")
+				{
+					$$.traducao = "\t" + $$.label + " = " + "1" + ";\n";
+				}
+				else
+				{
+					$$.traducao = "\t" + $$.label + " = " + "0" + ";\n";
+				}*/
+			}
 			;
 
 REC_ATR		: TK_ID ',' REC_ATR ',' E
@@ -237,7 +309,7 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 				v.tipo = $5.tipo;
 				temp_umap[newlabel] = v;
 
-				pair<string, string> pair_exp;
+				pair<string, int> pair_exp;
 				pair_exp.first = newlabel;
 				pair_exp.second = $5.tipo;
 
@@ -255,7 +327,7 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 				v.tipo = $3.tipo;
 				temp_umap[newlabel] = v;
 
-				pair<string, string> pair_exp;
+				pair<string, int> pair_exp;
 				pair_exp.first = newlabel;
 				pair_exp.second = $3.tipo;
 
@@ -275,6 +347,7 @@ int yyparse();
 
 int main( int argc, char* argv[] )
 {
+	initialize_tipo_umap();
 	yyparse();
 
 	return 0;
@@ -304,7 +377,7 @@ string declare_variables()
 
 	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++)
 	{
-		total += "\t" + it->second.tipo + " " + it->first + ";\n";
+		total += "\t" + tipo_umap[it->second.tipo] + " " + it->first + ";\n";
 	}
 
 	total += "\n";
@@ -338,4 +411,20 @@ string get_id_label(string user_label)
 	}
 
 	return var_umap[user_label];
+}
+
+void initialize_tipo_umap()
+{
+	tipo_umap[INT] = "int";
+	//tipo_umap[STRING] = "string"
+	tipo_umap[BOOLEAN] = "int";
+	tipo_umap[DOUBLE] = "double";
+
+
+}
+
+void initialize_matrix()
+{
+	//string matrix[int][float][+] = (float, 1)
+
 }
