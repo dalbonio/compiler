@@ -57,7 +57,7 @@ COMPLEX "*"[^/]
 
 [(){}[\];,]	{ return *yytext; }
 
-[+\-*/=]		{ return *yytext; }
+[+\-*/=><!]		{ return *yytext; }
 
 {BOOL}      { yylval.tipo = BOOLEAN; yylval.traducao = yytext; return TK_BOOL; }
 {STR}       {}
