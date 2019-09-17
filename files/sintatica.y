@@ -10,6 +10,11 @@
 
 #define YYSTYPE atributos
 
+#define BOOLEAN 1
+#define DOUBLE 2
+#define INT 3
+#define STRING 4
+
 using namespace std;
 
 struct variavel
@@ -64,7 +69,7 @@ void initialize_tipo_umap();
 
 S 			: BLOCO
 			{
-				cout << "/*Compilador FOCA*/\n";
+				cout << "\n/*Compilador FOCA*/\n";
 				cout << "#include <iostream>\n";
 				cout << "#include<string.h>\n#include<stdio.h>\n";
 				cout <<	"int main(void)\n{\n";

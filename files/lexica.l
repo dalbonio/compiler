@@ -1,9 +1,6 @@
 %{
 #include <string>
-	#define BOOLEAN 1
-	#define DOUBLE 2
-	#define INT 3
-	#define STRING 4
+
 %}
 
 ESPACO [ \t]
@@ -65,8 +62,9 @@ COMPLEX "*"[^/]
 {BOOL}      { yylval.tipo = BOOLEAN; yylval.traducao = yytext; return TK_BOOL; }
 {STR}       {}
 {NUM}		{ yylval.tipo = INT; yylval.traducao = yytext; return TK_NUM; }
-{ID}		{ yylval.traducao = yytext; yylval.label = get_id_label(yytext); return TK_ID; }
 {REAL}      { yylval.tipo = DOUBLE; yylval.traducao = yytext; return TK_REAL; }
+
+{ID}		{ yylval.traducao = yytext; yylval.label = get_id_label(yytext); return TK_ID; }
 
 
 .			{ *yytext; }
