@@ -88,6 +88,7 @@ void initialize_matrix();
 %left '>' '<' TK_EQ TK_NEQ TK_LEQ TK_GEQ
 %left '+' '-'
 %left '*' '/'
+%left '(' ')'
 
 %%
 
@@ -193,7 +194,19 @@ COMANDO 	: E
 			}
 			;
 
-E 			: E '+' E
+E 			: | '(' E ')'
+			{
+
+				$$.tipo = $2.tipo;
+				$$.label = label_generator(); //$$.label = $2.label
+				variavel v; //useless
+				v.tipo = $$.tipo; //useless
+				temp_umap[$$.label] = v; //useless
+				$$.resultado = $2.resultado; 
+				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + ";\n";
+
+			}
+			| E '+' E
 			{
 				$$.tipo = $1.tipo;
 				$$.label = label_generator();
@@ -254,7 +267,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -272,7 +285,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " > " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -304,7 +317,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -322,7 +335,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " < " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -354,7 +367,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -372,7 +385,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " >= " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -404,7 +417,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -422,7 +435,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " <= " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -454,7 +467,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -472,7 +485,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " == " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -504,7 +517,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				if($1.tipo != op_type || $3.tipo != op_type)
 				{
 					new_label = label_generator();
@@ -522,7 +535,7 @@ E 			: E '+' E
 						$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[op_type] + ")" + " " + $3.label + ";\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + " != " + new_label + ";\n";
 					}
-					
+
 					/*
 						a = 2.0 > 1
 						temp1 = 2.0
@@ -552,7 +565,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
 			}
 			| E TK_OR E
@@ -570,7 +583,7 @@ E 			: E '+' E
 				{
 					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
 				}
-				
+
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " || " + $3.label + ";\n";
 			}
 			| TK_NOT E
@@ -777,7 +790,7 @@ void initialize_matrix()
 		double, double = double
 		double, int = double
 		int, int = int
-		
+
 		---
 		operadores relacionais
 		string, string = boolean (==, !=, >, <)
@@ -790,7 +803,7 @@ void initialize_matrix()
 		operadores logicos
 		boolean, boolean = boolean
 	*/
-	
+
 	for(int i = 0; i < QTD_OPERATORS + 1; i++)
 	{
 		for(int j = 0; j < QTD_TYPES + 1; j++)
