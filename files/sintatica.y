@@ -53,6 +53,7 @@ struct atributos
 unordered_map<string, string> var_umap;
 unordered_map<string, variavel> temp_umap;
 unordered_map<int, string> tipo_umap;
+unordered_map<string, int> tipo_umap_str;
 
 queue <string> multiple_atr_queue;
 stack <pair<string, int>> multiple_atr_stack;
@@ -78,6 +79,7 @@ void initialize_matrix();
 %token TK_AND TK_OR TK_NOT TK_EQ TK_NEQ
 %token TK_FOR TK_WHILE TK_IF TK_GEQ TK_LEQ
 
+%token TK_CASTING
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
 
@@ -137,12 +139,10 @@ COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
 			}
-			/*
 			| E TK_FIM_LINHA
 			{
 				$$.traducao = $1.traducao;
 			}
-			*/
 			| TK_ID ',' REC_ATR ',' E TK_FIM_LINHA
 			{
 				string newlabel = label_generator();
@@ -202,9 +202,25 @@ E 			: | '(' E ')'
 				variavel v; //useless
 				v.tipo = $$.tipo; //useless
 				temp_umap[$$.label] = v; //useless
-				$$.resultado = $2.resultado; 
+				$$.resultado = $2.resultado;
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + ";\n";
 
+			}
+			| '(' TK_CASTING ')' E
+			{
+				$$.label = label_generator();
+				$$.tipo = tipo_umap_str[$2.label];
+
+				if( $2.label == "boolean" && $4.tipo != BOOLEAN )
+				{
+					yyerror("n tem como converter pra boolean");
+				}
+
+				variavel v;
+				v.tipo = $$.tipo;
+				temp_umap[$$.label] = v;
+
+				$$.traducao = $4.traducao + "\t" + $$.label + " = " + "(" + $2.label + ")" + $4.label + ";\n";
 			}
 			| E '+' E
 			{
@@ -603,12 +619,27 @@ E 			: | '(' E ')'
 			}
 			| TK_ID '=' E
 			{
-				$$.tipo = $3.tipo;
-				temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
-				$$.label = $1.label;
+				//no caso da variavel ja ter um tipo setado no codigo
+				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
+				{
+					$$.tipo = $3.tipo;
+
+					//criar uma temporaria nova pra guardar o antigo valor
+					$$.label = label_generator();
+					variavel v;
+					v.tipo = $$.tipo;
+					temp_umap[$$.label] = v;
+					var_umap[$1.traducao] = $$.label;
+				}
+				else
+				{
+					$$.tipo = $3.tipo;
+					temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
+					$$.label = $1.label;
+				}
 
 				$$.resultado = $1.resultado;
-				$$.traducao = $3.traducao + "\t" + $1.label + " = " + $3.label + ";\n";
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
 			}
 			| TK_NUM
 			{
@@ -761,6 +792,7 @@ string get_id_label(string user_label)
 		string new_label = label_generator();
 		variavel new_var;
 		new_var.user_label = user_label;
+		new_var.tipo = 0;
 
 		var_umap[user_label] = new_label;
 		temp_umap[new_label] = new_var;
@@ -777,6 +809,11 @@ void initialize_tipo_umap()
 	//tipo_umap[STRING] = "string"
 	tipo_umap[BOOLEAN] = "int";
 	tipo_umap[DOUBLE] = "double";
+
+	tipo_umap_str["int"] = INT;
+	//tipo_umap[STRING] = "string"
+	tipo_umap_str["int"] = BOOLEAN;
+	tipo_umap_str["double"] = DOUBLE;
 }
 
 void initialize_matrix()

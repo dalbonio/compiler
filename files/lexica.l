@@ -15,6 +15,7 @@ REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
 BOOL true|false
+TIPO int|double|boolean
 
 START "/*"
 END "*/"
@@ -47,18 +48,11 @@ COMPLEX "*"[^/]
 "while"     {return TK_WHILE;}
 "end"		{return TK_END;}
 
-
-"int"		{return TK_TIPO_INT;}
-"float"		{return TK_TIPO_FLOAT;}
-"double"    {return TK_TIPO_DOUBLE;}
-"char"		{return TK_TIPO_CHAR;}
-"string"    {return TK_TIPO_STRING;}
-"bool"		{return TK_TIPO_BOOL;}
-
 [(){}[\];,]	{ return *yytext; }
 
 [+\-*/=><!]		{ return *yytext; }
 
+{TIPO}      { yylval.label = yytext; return TK_CASTING;}
 {BOOL}      { yylval.tipo = BOOLEAN; yylval.traducao = yytext; return TK_BOOL; }
 {STR}       {}
 {NUM}		{ yylval.tipo = INT; yylval.traducao = yytext; return TK_NUM; }
