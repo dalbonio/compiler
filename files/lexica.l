@@ -15,7 +15,7 @@ REAL {NUM}+("."{NUM}+)?
 CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
 BOOL true|false
-TIPO int|double|boolean
+TIPO int|double|boolean|string
 
 START "/*"
 END "*/"
@@ -33,7 +33,7 @@ COMPLEX "*"[^/]
  <newstate>{END}  {}
 
 "\\\n"		{}
-"\n"		{return TK_FIM_LINHA;}
+"\n"		{contadorLinha += 1; return TK_FIM_LINHA;}
 ">="		{return TK_GEQ;}
 "<="		{return TK_LEQ;}
 

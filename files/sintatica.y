@@ -61,6 +61,7 @@ stack <pair<string, int>> multiple_atr_stack;
 int matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 
 int tokenContador = 0;
+int contadorLinha = 0;
 
 string label_generator();
 int yylex(void);
@@ -210,6 +211,11 @@ E 			: | '(' E ')'
 			{
 				$$.label = label_generator();
 				$$.tipo = tipo_umap_str[$2.label];
+
+				if( $2.label != "int" && $2.label != "double")
+				{
+					yyerror("erro na conversao");
+				}
 
 				if( $2.label == "boolean" && $4.tipo != BOOLEAN )
 				{
@@ -744,7 +750,7 @@ int main( int argc, char* argv[] )
 
 void yyerror( string MSG )
 {
-	cout << MSG << endl;
+	cout << "linha " << contadorLinha << ": " <<  MSG << endl;
 	exit (0);
 }
 
