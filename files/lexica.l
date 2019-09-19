@@ -8,7 +8,6 @@ DIGITO [0-9]
 LETRA [A-Za-z_]
 STR \"([^\\\"]|\\.)*\"
 
-
 DELIM {ESPACO}+
 NUM {DIGITO}+
 REAL {NUM}+("."{NUM}+)?
@@ -16,6 +15,7 @@ CHAR \'({LETRA}|{NUM})\'
 ID {LETRA}({LETRA}|{NUM})*
 BOOL true|false
 TIPO int|double|boolean|string
+OP_REL >=|<=|<|>|eq|neq
 
 START "/*"
 END "*/"
@@ -34,12 +34,8 @@ COMPLEX "*"[^/]
 
 "\\\n"		{}
 "\n"		{contadorLinha += 1; return TK_FIM_LINHA;}
-">="		{return TK_GEQ;}
-"<="		{return TK_LEQ;}
 
 {DELIM} 	{}
-"eq"		{return TK_EQ;}
-"neq"		{return TK_NEQ;}
 "and"		{return TK_AND;}
 "or"		{return TK_OR;}
 "not"		{return TK_NOT;}
@@ -50,7 +46,10 @@ COMPLEX "*"[^/]
 
 [(){}[\];,]	{ return *yytext; }
 
-[+\-*/=><!]		{ return *yytext; }
+[=!]		{ return *yytext; }
+
+[+\-*/]  {yylval.traducao = yytext; return TK_OP_ARIT;}
+{OP_REL}     {yylval.traducao = yytext; return TK_OP_REL;}
 
 {TIPO}      { yylval.label = yytext; return TK_CASTING;}
 {BOOL}      { yylval.tipo = BOOLEAN; yylval.traducao = yytext; return TK_BOOL; }
@@ -64,3 +63,11 @@ COMPLEX "*"[^/]
 .			{ *yytext; }
 
 %%
+/*
+">="		{return TK_GEQ;}
+"<="		{return TK_LEQ;}
+"eq"		{return TK_EQ;}
+"neq"		{return TK_NEQ;}
+"eq"		{yylval.traducao = yytext; return TK_OP_REL;}
+"neq"		{yylval.traducao = yytext; return TK_OP_REL;}
+*/
