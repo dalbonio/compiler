@@ -55,6 +55,11 @@ string declare_variables()
 
 	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++)
 	{
+		if(it->second.tipo == 0)
+		{
+			it->second.tipo = INT;
+		}
+		
 		total += "\t" + tipo_umap[it->second.tipo] + " " + it->first + ";\n";
 	}
 
@@ -139,7 +144,7 @@ void replace_all(std::string & data, std::string toSearch, std::string replaceSt
 {
 	// Get the first occurrence
 	size_t pos = data.find(toSearch);
- 
+
 	// Repeat till end is reached
 	while( pos != std::string::npos)
 	{
@@ -153,7 +158,7 @@ void replace_all(std::string & data, std::string toSearch, std::string replaceSt
 void umap_label_add(string& new_label, int new_tipo)
 {
 	new_label = label_generator();
-	
+
 	variavel new_var;
 	new_var.tipo = new_tipo;
 	temp_umap[new_label] = new_var;
@@ -182,7 +187,7 @@ void initialize_op_umap()
 
 	op_umap[EQ] = "==";
 	op_umap[NEQ] = "!=";
-	
+
 	op_umap[AND] = "&&";
 	op_umap[OR] = "||";
 

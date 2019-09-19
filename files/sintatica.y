@@ -285,6 +285,10 @@ E 			: | '(' E ')'
 			| TK_ID
 			{
 				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
+				if ($$.tipo == 0)
+				{
+					yyerror("variable " + $1.traducao + " not declared");
+				}
 				$$.label = $1.label;
 				$$.traducao = "";
 				$$.resultado = 0;
