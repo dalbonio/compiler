@@ -19,7 +19,8 @@ int yylex(void);
 
 %left '='
 %left '>' '<' TK_EQ TK_NEQ TK_LEQ TK_GEQ
-%left '+' '-'
+%left '+'
+%left '-'
 %left '*' '/'
 %left '(' ')'
 
@@ -71,7 +72,7 @@ COMANDO 	: E
 			{
 				string newlabel;
 				umap_label_add(newlabel, $5.tipo);
-				
+
 				pair<string, int> pair_exp;
 				pair_exp.first = newlabel;
 				pair_exp.second = $5.tipo;
@@ -141,11 +142,29 @@ E 			: | '(' E ')'
 				{
 					yyerror("n tem como converter pra boolean");
 				}
-				
+
 				$$.tipo = tipo_umap_str[$2.label];
 				umap_label_add($$.label, $$.tipo);
 
 				$$.traducao = $4.traducao + "\t" + $$.label + " = " + "(" + $2.label + ")" + $4.label + ";\n";
+			}
+			| TK_OP_ARIT E
+			{
+				if($1.traducao != "-")
+				{
+					yyerror("operation before expression");
+				}
+
+				$$.tipo = $2.tipo;
+				if($2.tipo != INT && $2.tipo != DOUBLE)
+				{
+					yyerror("this operation is not allowed for this primitive");
+				}
+
+				umap_label_add($$.label, $$.tipo);
+				$$.resultado = $2.resultado * -1;
+				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + " * -1;\n";
+
 			}
 			| E TK_OP_ARIT E
 			{
@@ -157,7 +176,7 @@ E 			: | '(' E ')'
 			}
 			| E TK_OP_REL E
 			{
-				
+
 				int op = op_umap_str[$2.traducao];
 				string op_type = matrix[op][$1.tipo][$3.tipo];
 				string new_label;
