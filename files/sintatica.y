@@ -4,12 +4,13 @@
 int yylex(void);
 %}
 
+%token TK_ID
 %token TK_NUM TK_REAL TK_BOOL
 
-%token TK_MAIN TK_END TK_OP_ARIT TK_OP_REL
-%token TK_ID TK_TIPO_INT TK_TIPO_STRING TK_TIPO_DOUBLE TK_TIPO_FLOAT TK_TIPO_CHAR TK_TIPO_BOOL
-%token TK_AND TK_OR TK_NOT TK_EQ TK_NEQ
-%token TK_FOR TK_WHILE TK_IF TK_GEQ TK_LEQ
+%token TK_NOT
+%token TK_OP_ARIT TK_OP_REL TK_OP_LOG
+
+%token TK_FOR TK_WHILE TK_IF TK_END
 
 %token TK_CASTING
 %token TK_FIM TK_ERROR
@@ -18,7 +19,9 @@ int yylex(void);
 %start S
 
 %left '='
-%left '>' '<' TK_EQ TK_NEQ TK_LEQ TK_GEQ
+%left TK_OP_LOG
+%left TK_OP_REL
+%left TK_NOT
 %left '+'
 %left '-'
 %left '*' '/'
@@ -29,9 +32,8 @@ int yylex(void);
 S 			: BLOCO
 			{
 				cout << "\n/*Compilador FOCA*/\n";
-				cout << "#include <iostream>\n";
-				cout << "#include<string.h>\n#include<stdio.h>\n";
-				cout <<	"int main(void)\n{\n";
+				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
+				cout <<	"\nint main(void)\n{\n";
 				cout << declare_variables();
 				cout << $1.traducao << "\n\treturn 0;\n}" << endl;
 			}
@@ -71,16 +73,18 @@ COMANDO 	: E
 			| TK_ID ',' REC_ATR ',' E TK_FIM_LINHA
 			{
 				string newlabel;
+				string local_traducao;
+				pair<string, int> pair_exp;
+
 				umap_label_add(newlabel, $5.tipo);
 
-				pair<string, int> pair_exp;
+				local_traducao = "\t" + newlabel + " = " + $5.label + ";\n";
 				pair_exp.first = newlabel;
 				pair_exp.second = $5.tipo;
 
 				multiple_atr_queue.push($1.label);
 				multiple_atr_stack.push(pair_exp);
 
-				string local_traducao = "\t" + newlabel + " = " + $5.label + ";\n";
 
 				while(!multiple_atr_queue.empty() || !multiple_atr_stack.empty() )
 				{
@@ -88,7 +92,6 @@ COMANDO 	: E
 					pair<string, int> exp = multiple_atr_stack.top();
 
 					temp_umap[var].tipo = exp.second;
-
 					local_traducao += "\t" + var + " = " + exp.first + ";\n";
 
 					multiple_atr_queue.pop();
@@ -127,8 +130,8 @@ E 			: | '(' E ')'
 				v.tipo = $$.tipo; //useless
 				temp_umap[$$.label] = v; //useless
 
-				$$.resultado = $2.resultado;
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + ";\n";
+				//$$.resultado = $2.resultado;
 
 			}
 			| '(' TK_CASTING ')' E
@@ -145,7 +148,6 @@ E 			: | '(' E ')'
 
 				$$.tipo = tipo_umap_str[$2.label];
 				umap_label_add($$.label, $$.tipo);
-
 				$$.traducao = $4.traducao + "\t" + $$.label + " = " + "(" + $2.label + ")" + $4.label + ";\n";
 			}
 			| TK_OP_ARIT E
@@ -155,86 +157,45 @@ E 			: | '(' E ')'
 					yyerror("operation before expression");
 				}
 
-				$$.tipo = $2.tipo;
 				if($2.tipo != INT && $2.tipo != DOUBLE)
 				{
 					yyerror("this operation is not allowed for this primitive");
 				}
 
+				$$.tipo = $2.tipo;
 				umap_label_add($$.label, $$.tipo);
-				$$.resultado = $2.resultado * -1;
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + " * -1;\n";
+				//$$.resultado = $2.resultado * -1;
 
 			}
 			| E TK_OP_ARIT E
 			{
-				$$.tipo = $1.tipo;
-				umap_label_add($$.label, $$.tipo);
-				$$.resultado = $1.resultado + $3.resultado;
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " " + $2.traducao + " " + $3.label + ";\n";
+				variavel new_var;
 
+				$$.label = label_generator();
+				$$.traducao = $1.traducao + $3.traducao;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $3, 0);
+				new_var.tipo = $$.tipo;
+				temp_umap[$$.label] = new_var;
+				//$$.resultado = $1.resultado + $3.resultado;
 			}
 			| E TK_OP_REL E
 			{
 
-				int op = op_umap_str[$2.traducao];
-				string op_type = matrix[op][$1.tipo][$3.tipo];
-				string new_label;
-				int new_type = op_type[0] - '0';
-
-				cout << op << endl << $2.traducao << endl << op_umap[op] << endl;
-				$$.resultado = 0;
 				$$.tipo = BOOLEAN;
-
 				umap_label_add($$.label, $$.tipo);
-				umap_label_add(new_label, new_type);
-
-				op_type.replace(0, 1, "");
-				replace_op(op_type, new_label, $1.label, $3.label, $$.label, op_umap[op]);
-
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += op_type;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				//$$.resultado = 0;
 
-				if(op_type == ERROR_VALUE)
-				{
-					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
-				}
 			}
-			| E TK_AND E
+			| E TK_OP_LOG E
 			{
-				$$.label = label_generator();
-				$$.resultado = 0;
 				$$.tipo = BOOLEAN;
-				variavel v;
-				v.tipo = $$.tipo;
-				temp_umap[$$.label] = v;
-
-				string op_type = matrix[AND][$1.tipo][$3.tipo];
-
-				if(op_type == ERROR_VALUE)
-				{
-					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
-				}
-
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
-			}
-			| E TK_OR E
-			{
-				$$.label = label_generator();
-				$$.resultado = 0;
-				$$.tipo = BOOLEAN;
-				variavel v;
-				v.tipo = $$.tipo;
-				temp_umap[$$.label] = v;
-
-				string op_type = matrix[OR][$1.tipo][$3.tipo];
-
-				if(op_type == ERROR_VALUE)
-				{
-					yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
-				}
-
-				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " || " + $3.label + ";\n";
+				umap_label_add($$.label, $$.tipo);
+				$$.traducao = $1.traducao + $3.traducao;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				//$$.resultado = 0;
 			}
 			| TK_NOT E
 			{
@@ -245,7 +206,7 @@ E 			: | '(' E ')'
 
 				$$.tipo = $2.tipo;
 				umap_label_add($$.label, $$.tipo);
-				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + " " + $2.label + ";\n";
+				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
 			}
 			| TK_ID '=' E
 			{
@@ -265,43 +226,42 @@ E 			: | '(' E ')'
 					$$.label = $1.label;
 				}
 
-				$$.resultado = $1.resultado;
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
+				//$$.resultado = $1.resultado;
 			}
 			| TK_NUM
 			{
 				$$.tipo = $1.tipo;
 				umap_label_add($$.label, $$.tipo);
-				$$.resultado = stoi($1.traducao);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
+				//$$.resultado = stoi($1.traducao);
 			}
 			| TK_REAL
 			{
 				$$.tipo = $1.tipo;
 				umap_label_add($$.label, $$.tipo);
-				$$.resultado = stoi($1.traducao);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
-			}
-			| TK_ID
-			{
-				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
-				if ($$.tipo == 0)
-				{
-					yyerror("variable " + $1.traducao + " not declared");
-				}
-				$$.label = $1.label;
-				$$.traducao = "";
-				$$.resultado = 0;
+				//$$.resultado = stoi($1.traducao);
 			}
 			| TK_BOOL
 			{
 				$$.tipo = $1.tipo;
 				umap_label_add($$.label, $$.tipo);
-				$$.resultado = 0;
-
-				cout << $$.label << endl << $$.tipo << endl;
-
 				$$.traducao = "\t" + $$.label + " = " + ($1.traducao == "true"? "1" : "0") + ";\n";
+				//$$.resultado = 0;
+			}
+			| TK_ID
+			{
+				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
+				
+				if ($$.tipo == 0)
+				{
+					yyerror("variable " + $1.traducao + " not declared");
+				}
+
+				$$.label = $1.label;
+				$$.traducao = "";
+				//$$.resultado = 0;
 			}
 			;
 

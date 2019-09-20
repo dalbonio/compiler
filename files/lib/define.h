@@ -12,8 +12,8 @@
 #define BOOLEAN 3
 #define STRING 4
 
-#define SUM 1
-#define DIFF 2
+#define ADD 1
+#define SUB 2
 #define MULT 3
 #define DIV 4
 
@@ -21,8 +21,8 @@
 #define NEQ 6
 #define GEQ 7
 #define LEQ 8
-#define LESS 9
-#define MORE 10
+#define GREATER 9
+#define LESS 10
 
 #define AND 11
 #define OR 12

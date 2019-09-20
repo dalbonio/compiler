@@ -1,4 +1,31 @@
 /*
+a = 1 + 1
+b = 2.0 - 2
+c = 3 * 3.0
+d = 4.0 / 4.0
+
+e = 1 > 1
+f = 2.0 < 2
+g = 3 >= 3.0
+h = 4.0 <= 4.0
+
+i = true and true
+j = false or false
+k = not true
+
+l = 1 eq 1.0
+m = 2 neq 2
+*/
+
+/*
+a = true + 5
+a = false - 6.0
+a = true eq 5
+a = false neq 6.0
+a = not 1
+a = 1.0 and false
+a = 2 or true
+
 a = 1\n\n
 TK_ID = TK_NUM\n\n
 E\n\n
@@ -105,7 +132,7 @@ boolean, boolean = boolean
     $$.traducao = $1.traducao + $3.traducao;
 
     string new_label;
-    int op_type = matrix[MORE][$1.tipo][$3.tipo];
+    int op_type = matrix[GREATER][$1.tipo][$3.tipo];
 
     if(op_type == -1)
     {
@@ -229,7 +256,7 @@ boolean, boolean = boolean
     $$.traducao = $1.traducao + $3.traducao;
 
     string new_label;
-    int op_type = matrix[MORE][$1.tipo][$3.tipo];
+    int op_type = matrix[GREATER][$1.tipo][$3.tipo];
 
     if(op_type == -1)
     {
@@ -340,5 +367,42 @@ boolean, boolean = boolean
     {
         $$.traducao += "\t" + $$.label + " = " + $1.label + " != " + $3.label + ";\n";
     }
+}
+
+| E TK_AND E
+{
+    $$.label = label_generator();
+    $$.resultado = 0;
+    $$.tipo = BOOLEAN;
+    variavel v;
+    v.tipo = $$.tipo;
+    temp_umap[$$.label] = v;
+
+    string op_type = matrix[AND][$1.tipo][$3.tipo];
+
+    if(op_type == ERROR_VALUE)
+    {
+        yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
+    }
+
+    $$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " && " + $3.label + ";\n";
+}
+| E TK_OR E
+{
+    $$.label = label_generator();
+    $$.resultado = 0;
+    $$.tipo = BOOLEAN;
+    variavel v;
+    v.tipo = $$.tipo;
+    temp_umap[$$.label] = v;
+
+    string op_type = matrix[OR][$1.tipo][$3.tipo];
+
+    if(op_type == ERROR_VALUE)
+    {
+        yyerror("\nA operação não pode ser executada para os tipos de variáveis selecionados.");
+    }
+
+    $$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " || " + $3.label + ";\n";
 }
 */

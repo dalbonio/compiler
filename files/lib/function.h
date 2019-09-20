@@ -3,37 +3,24 @@
 
 #include "define.h"
 #include "header.h"
-
-unordered_map<string, string> var_umap;
-unordered_map<string, variavel> temp_umap;
-unordered_map<int, string> tipo_umap;
-unordered_map<string, int> tipo_umap_str;
-unordered_map<int, string> op_umap;
-unordered_map<string, int> op_umap_str;
-
-queue <string> multiple_atr_queue;
-stack <pair<string, int>> multiple_atr_stack;
-
-string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
-
-int tokenContador = 0;
-int contadorLinha = 0;
+#include "variable.h"
 
 void yyerror(string);
-
 string label_generator();
 string declare_variables();
 string get_id_label(string user_label);
 void initialize_tipo_umap();
+void set_error_matrix();
 void initialize_matrix();
-void replace_all(std::string & data, std::string toSearch, std::string replaceStr);
+void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
 void umap_label_add(string& new_label, int new_tipo);
-void replace_op(string& op_type, string new_label, string first_label, string second_label, string final_label, string op);
+void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op);
 void initialize_op_umap();
+string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 
 void yyerror( string MSG )
 {
-	cout << "linha " << contadorLinha << ": " <<  MSG << endl;
+	cout << "\n---\n" << "linha " << contadorLinha << ": " << MSG << "\n---\n";
 	exit (0);
 }
 
@@ -46,14 +33,14 @@ string declare_variables()
 {
 	string total = string("");
 
-	for(auto it=var_umap.begin(); it!=var_umap.end(); it++)
+	for(auto it = var_umap.begin(); it != var_umap.end(); it++)
 	{
-		total += "\t//" + it->first + "=" + it->second + "\n";
+		total += "\t//" + it->first + " = " + it->second + "\n";
 	}
 
 	total += "\n";
 
-	for(auto it=temp_umap.begin(); it!=temp_umap.end(); it++)
+	for(auto it = temp_umap.begin(); it != temp_umap.end(); it++)
 	{
 		if(it->second.tipo == 0)
 		{
@@ -99,7 +86,7 @@ void initialize_tipo_umap()
 	tipo_umap_str["double"] = DOUBLE;
 }
 
-void initialize_matrix()
+void set_error_matrix()
 {
 	for(int i = 0; i < QTD_OPERATORS + 1; i++)
 	{
@@ -111,8 +98,13 @@ void initialize_matrix()
 			}
 		}
 	}
+}
 
-	for(int i = SUM; i <= MORE; i++)
+void initialize_matrix()
+{
+	set_error_matrix();
+
+	for(int i = ADD; i <= LESS; i++)
 	{
 		for(int j = INT; j <= DOUBLE; j++)
 		{
@@ -120,23 +112,24 @@ void initialize_matrix()
 			{
 				if(j < k)
 				{
-					matrix[i][j][k] = to_string(k) + "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n\tfinal_label = new_label operator second_label;\n";
+					matrix[i][j][k] = to_string(k) + "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n\tmain_label = new_label operator second_label;\n";
 				}
 				else if(j > k)
 				{
-					matrix[i][j][k] = to_string(j) + "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n\tfinal_label = first_label operator new_label;\n";
-				}
-				else if(j == k)
-				{
-					matrix[i][j][k] = to_string(j) + "\tfinal_label = first_label operator second_label;\n";
+					matrix[i][j][k] = to_string(j) + "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n\tmain_label = first_label operator new_label;\n";
 				}
 			}
+		}
+
+		for(int j = INT; j <= DOUBLE; j++)
+		{
+			matrix[i][j][j] = to_string(j) + "\tmain_label = first_label operator second_label;\n";
 		}
 	}
 
 	for(int i = AND; i <= OR ; i++)
 	{
-		matrix[i][BOOLEAN][BOOLEAN] = to_string(BOOLEAN) + "final_label = first_label operator second_label;\n";
+		matrix[i][BOOLEAN][BOOLEAN] = to_string(BOOLEAN) + "\tmain_label = first_label operator second_label;\n";
 	}
 }
 
@@ -164,26 +157,26 @@ void umap_label_add(string& new_label, int new_tipo)
 	temp_umap[new_label] = new_var;
 }
 
-void replace_op(string& op_type, string new_label, string first_label, string second_label, string final_label, string op)
+void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op)
 {
 	replace_all(op_type, "new_label", new_label);
 	replace_all(op_type, "first_label", first_label);
 	replace_all(op_type, "second_label", second_label);
-	replace_all(op_type, "final_label", final_label);
+	replace_all(op_type, "main_label", main_label);
 	replace_all(op_type, "operator", op);
 }
 
 void initialize_op_umap()
 {
-	op_umap[SUM] = "+";
-	op_umap[DIFF] = "-";
+	op_umap[ADD] = "+";
+	op_umap[SUB] = "-";
 	op_umap[MULT] = "*";
 	op_umap[DIV] = "/";
 
 	op_umap[GEQ] = ">=";
 	op_umap[LEQ] = "<=";
 	op_umap[LESS] = "<";
-	op_umap[MORE] = ">";
+	op_umap[GREATER] = ">";
 
 	op_umap[EQ] = "==";
 	op_umap[NEQ] = "!=";
@@ -191,21 +184,57 @@ void initialize_op_umap()
 	op_umap[AND] = "&&";
 	op_umap[OR] = "||";
 
-    op_umap_str["+"] = SUM;
-	op_umap_str["-"] = DIFF;
+    op_umap_str["+"] = ADD;
+	op_umap_str["-"] = SUB;
 	op_umap_str["*"] = MULT;
 	op_umap_str["/"] = DIV;
 
 	op_umap_str[">="] = GEQ;
 	op_umap_str["<="] = LEQ;
 	op_umap_str["<"] = LESS;
-	op_umap_str[">"] = MORE;
+	op_umap_str[">"] = GREATER;
 
 	op_umap_str["eq"] = EQ;
 	op_umap_str["neq"] = NEQ;
 
 	op_umap_str["and"] = AND;
 	op_umap_str["or"] = OR;
+}
+
+string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
+{
+	//final_type == 0 serve para o tipo de $$ ser igual ao tipo das conversões, em operações aritméticas
+	int op;
+	int new_type;
+	string new_label;
+	string op_translate;
+
+	op = op_umap_str[atr_2.traducao];
+	op_translate = matrix[op][atr_1.tipo][atr_3.tipo];
+	new_type = op_translate[0] - '0';
+
+	if(op_translate == ERROR_VALUE)
+	{
+		string tipo_1 = atr_1.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_1.tipo];
+		string tipo_2 = atr_3.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_3.tipo];
+
+		yyerror("Operador \"" + atr_2.traducao + "\" não funciona para os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\"");
+	}
+
+	if(atr_1.tipo != atr_3.tipo)
+	{
+		umap_label_add(new_label, new_type);
+	}
+
+	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
+	{
+		atr_main.tipo = new_type;
+	}
+
+	op_translate.replace(0, 1, "");
+	replace_op(op_translate, new_label, atr_1.label, atr_3.label, atr_main.label, op_umap[op]);
+	
+	return op_translate;
 }
 
 #endif
