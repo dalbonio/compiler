@@ -36,6 +36,8 @@ COMPLEX "*"[^/]
 "\\\n"		{}
 "\n"		{contadorLinha += 1; return TK_FIM_LINHA;}
 
+"loop"		{return TK_LOOP;}
+"do"		{return TK_DO;}
 {DELIM} 	{}
 "not"		{return TK_NOT;}
 "if"		{return TK_IF;}

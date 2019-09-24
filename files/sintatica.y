@@ -10,7 +10,7 @@ int yylex(void);
 %token TK_NOT
 %token TK_OP_ARIT TK_OP_REL TK_OP_LOG
 
-%token TK_FOR TK_WHILE TK_IF TK_END
+%token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP
 
 %token TK_CASTING
 %token TK_FIM TK_ERROR
@@ -66,11 +66,20 @@ COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
 			}
-			| E TK_FIM_LINHA
+			| TK_LOOP '(' E ')'	TK_DO TK_FIM_LINHA COMANDOS TK_FIM_LINHA TK_END//while
+			{
+				//
+			}
+			| TK_DO TK_FIM_LINHA COMANDOS TK_FIM_LINHA TK_LOOP '(' ')' TK_END//do while
+			{
+
+			}
+			| TK_LOOP '(' ATR ';' COND ';' E ')' TK_DO TK_FIM_LINHA COMANDOS TK_FIM_LINHA TK_END//while
+			/*| E TK_FIM_LINHA
 			{
 				$$.traducao = $1.traducao;
-			}
-			| TK_ID ',' REC_ATR ',' E TK_FIM_LINHA
+			}*/
+			| TK_ID ',' REC_ATR ',' E
 			{
 				string newlabel;
 				string local_traducao;
@@ -179,7 +188,13 @@ E 			: | '(' E ')'
 				temp_umap[$$.label] = new_var;
 				//$$.resultado = $1.resultado + $3.resultado;
 			}
-			| E TK_OP_REL E
+			| COND
+			{
+				$$.tipo = $1.tipo;
+				$$.traducao = $1.traducao;
+				//$$.label = $1.label;
+			}
+			/*| E TK_OP_REL E
 			{
 
 				$$.tipo = BOOLEAN;
@@ -207,10 +222,13 @@ E 			: | '(' E ')'
 				$$.tipo = $2.tipo;
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
-			}
-			| TK_ID '=' E
+			}*/
+			| ATR
 			{
-				//no caso da variavel ja ter um tipo setado no codigo
+				$$.traducao = $1.traducao;
+				//$$.label = $1.label;
+
+				/*//no caso da variavel ja ter um tipo setado no codigo
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
 					$$.tipo = $3.tipo;
@@ -226,7 +244,7 @@ E 			: | '(' E ')'
 					$$.label = $1.label;
 				}
 
-				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";*/
 				//$$.resultado = $1.resultado;
 			}
 			| TK_NUM
@@ -298,6 +316,58 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 				multiple_atr_stack.push(pair_exp);
 			}
 			;
+
+ATR 		: TK_ID '=' E
+			{
+				//no caso da variavel ja ter um tipo setado no codigo
+				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
+				{
+					$$.tipo = $3.tipo;
+
+					//criar uma temporaria nova pra guardar o antigo valor
+					umap_label_add($$.label, $$.tipo);
+					var_umap[$1.traducao] = $$.label;
+				}
+				else
+				{
+					$$.tipo = $3.tipo;
+					temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
+					$$.label = $1.label;
+				}
+
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
+				//$$.resultado = $1.resultado;
+			};
+
+COND 		: E TK_OP_REL E
+			{
+
+				$$.tipo = BOOLEAN;
+				umap_label_add($$.label, $$.tipo);
+				$$.traducao = $1.traducao + $3.traducao;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				//$$.resultado = 0;
+
+			}
+			| E TK_OP_LOG E
+			{
+				$$.tipo = BOOLEAN;
+				umap_label_add($$.label, $$.tipo);
+				$$.traducao = $1.traducao + $3.traducao;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				//$$.resultado = 0;
+			}
+			| TK_NOT E
+			{
+				if($1.tipo != BOOLEAN)
+				{
+					yyerror("\nO operador \"not\" não pode ser utilizado com variável do tipo " + tipo_umap[$2.tipo]);
+				}
+
+				$$.tipo = $2.tipo;
+				umap_label_add($$.label, $$.tipo);
+				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
+			}
 
 %%
 
