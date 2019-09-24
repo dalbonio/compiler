@@ -6,6 +6,7 @@ int yylex(void);
 
 %token TK_ID
 %token TK_NUM TK_REAL TK_BOOL
+%token TK_INPUT
 
 %token TK_NOT
 %token TK_OP_ARIT TK_OP_REL TK_OP_LOG
@@ -159,6 +160,17 @@ E 			: | '(' E ')'
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $4.traducao + "\t" + $$.label + " = " + "(" + $2.label + ")" + $4.label + ";\n";
 			}
+			| TK_INPUT '(' TK_CASTING ')'
+			{
+				if($3.label == "boolean")
+				{
+					yyerror("nao tem como fazer input em boolean");
+				}
+
+				$$.tipo = tipo_umap_str[$3.label];
+				umap_label_add($$.label, $$.tipo);
+				$$.traducao = "\t" + string("cin >> ") + $$.label + ";\n";
+			}
 			| TK_OP_ARIT E
 			{
 				if($1.traducao != "-")
@@ -271,7 +283,7 @@ E 			: | '(' E ')'
 			| TK_ID
 			{
 				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
-				
+
 				if ($$.tipo == 0)
 				{
 					yyerror("variable " + $1.traducao + " not declared");

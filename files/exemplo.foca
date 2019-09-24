@@ -1,5 +1,2 @@
-//loop(a > 30)
-//b = 20
-//end
-
-a = 1
+a = input(double)
+b = a + 3
