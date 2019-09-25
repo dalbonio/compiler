@@ -36,6 +36,7 @@ COMPLEX "*"[^/]
 "\\\n"		{}
 "\n"		{contadorLinha += 1; return TK_FIM_LINHA;}
 
+<<EOF>>     {strcat(yytext, "\n"); return 0;}
 {DELIM} 	{}
 "not"		{return TK_NOT;}
 "if"		{return TK_IF;}

@@ -50,10 +50,10 @@ COMANDOS	: COMANDO COMANDOS
 				$$.label = "";
 				$$.traducao = $1.traducao + $2.traducao;
 			}
-			| TK_FIM_LINHA COMANDOS	//poder pular linha qt quiser no codigo
+			| TK_FIM_LINHA
 			{
 				$$.label = "";
-				$$.traducao = $2.traducao;
+				$$.traducao = "";
 			}
 			| //REGRA VAZIA
 			{
@@ -62,11 +62,7 @@ COMANDOS	: COMANDO COMANDOS
 			}
 			;
 
-COMANDO 	: E
-			{
-				$$.traducao = $1.traducao;
-			}
-			| E TK_FIM_LINHA
+COMANDO 	: E TK_FIM_LINHA
 			{
 				$$.traducao = $1.traducao;
 			}
@@ -253,7 +249,7 @@ E 			: | '(' E ')'
 			| TK_ID
 			{
 				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
-				
+
 				if ($$.tipo == 0)
 				{
 					yyerror("variable " + $1.traducao + " not declared");
