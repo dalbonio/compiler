@@ -17,6 +17,8 @@ void umap_label_add(string& new_label, int new_tipo);
 void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op);
 void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
+string loop_label_generator();
+string loop_label_end_generator();
 
 void yyerror( string MSG )
 {
@@ -218,7 +220,7 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 		string tipo_1 = atr_1.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_1.tipo];
 		string tipo_2 = atr_3.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_3.tipo];
 
-		yyerror("Operador \"" + atr_2.traducao + "\" não funciona para os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\"");
+		yyerror("Operação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
 	}
 
 	if(atr_1.tipo != atr_3.tipo)
@@ -235,6 +237,16 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	replace_op(op_translate, new_label, atr_1.label, atr_3.label, atr_main.label, op_umap[op]);
 	
 	return op_translate;
+}
+
+string loop_label_generator()
+{
+	return string("LOOP_") + to_string(loopContador);
+}
+
+string loop_label_end_generator()
+{
+	return string("LOOP_END_") + to_string(loopContador++);
 }
 
 #endif

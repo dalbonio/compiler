@@ -66,6 +66,27 @@ operadores logicos
 boolean, boolean = boolean
 */
 
+//$$.label = $1.label;
+
+/*//no caso da variavel ja ter um tipo setado no codigo
+if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
+{
+    $$.tipo = $3.tipo;
+
+    //criar uma temporaria nova pra guardar o antigo valor
+    umap_label_add($$.label, $$.tipo);
+    var_umap[$1.traducao] = $$.label;
+}
+else
+{
+    $$.tipo = $3.tipo;
+    temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
+    $$.label = $1.label;
+}
+
+$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";*/
+//$$.resultado = $1.resultado;
+
 /*
 | E '+' E
 {
@@ -404,5 +425,39 @@ boolean, boolean = boolean
     }
 
     $$.traducao = $1.traducao + $3.traducao + "\t" + $$.label + " = " + $1.label + " || " + $3.label + ";\n";
+}
+
+/*| E TK_OP_REL E
+{
+
+    $$.tipo = BOOLEAN;
+    umap_label_add($$.label, $$.tipo);
+    $$.traducao = $1.traducao + $3.traducao;
+    $$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+    //$$.resultado = 0;
+
+}
+| E TK_OP_LOG E
+{
+    $$.tipo = BOOLEAN;
+    umap_label_add($$.label, $$.tipo);
+    $$.traducao = $1.traducao + $3.traducao;
+    $$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+    //$$.resultado = 0;
+}
+| TK_NOT E
+{
+    if($1.tipo != BOOLEAN)
+    {
+        yyerror("\nO operador \"not\" não pode ser utilizado com variável do tipo " + tipo_umap[$2.tipo]);
+    }
+
+    $$.tipo = $2.tipo;
+    umap_label_add($$.label, $$.tipo);
+    $$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
+}
+/*| E TK_FIM_LINHA
+{
+    $$.traducao = $1.traducao;
 }
 */

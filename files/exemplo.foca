@@ -1,2 +1,7 @@
-a = input(double)
-b = a + 3
+do
+a = 1
+loop(true) end
+
+//do loop(true)
+//a = 1
+//end

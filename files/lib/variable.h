@@ -15,5 +15,6 @@ string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 
 int tokenContador = 0;
 int contadorLinha = 0;
+int loopContador = 0;
 
 #endif
