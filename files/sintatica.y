@@ -6,7 +6,7 @@ int yylex(void);
 
 %token TK_ID
 %token TK_NUM TK_REAL TK_BOOL
-%token TK_INPUT
+%token TK_INPUT TK_PRINT
 
 %token TK_NOT
 %token TK_OP_ARIT TK_OP_REL TK_OP_LOG
@@ -66,6 +66,17 @@ COMANDOS	: COMANDO COMANDOS
 COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
+			}
+			| TK_PRINT '(' E ')'
+			{
+				if( $3.tipo == BOOLEAN )
+				{
+					$$.traducao = $3.traducao + "\t" + string("if(") + $3.label + ")" + " cout << \"true\"; else cout << \"false\";\n";
+				}
+				else
+				{
+					$$.traducao =  $3.traducao + "\t" + string("cout >> ") + $$.label + ";\n";
+				}
 			}
 			| TK_LOOP '(' E ')'	TK_DO TK_FIM_LINHA COMANDOS TK_FIM_LINHA TK_END//while
 			{
