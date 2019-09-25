@@ -496,6 +496,7 @@ int yyparse();
 
 int main( int argc, char* argv[] )
 {
+	yydebug = 1;
 	initialize_tipo_umap();
 	initialize_matrix();
 	initialize_op_umap();
