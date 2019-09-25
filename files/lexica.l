@@ -7,6 +7,7 @@ ESPACO [ \t]
 DIGITO [0-9]
 LETRA [A-Za-z_]
 STR \"([^\\\"]|\\.)*\"
+J_LINE (\n)*
 
 DELIM {ESPACO}+
 NUM {DIGITO}+
@@ -34,7 +35,7 @@ COMPLEX "*"[^/]
  <newstate>{END}            {}
 
 "\\\n"		{}
-"\n"		{contadorLinha += 1; return TK_FIM_LINHA;}
+{J_LINE}	{contadorLinha += strlen(yytext); strcpy(yytext, "\n"); return TK_FIM_LINHA;}
 
 "input"     {return TK_INPUT;}
 "print"     {return TK_PRINT;}
