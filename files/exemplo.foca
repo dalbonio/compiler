@@ -1,3 +1,13 @@
+<<<<<<< HEAD
 a = 30
 b = 20
 print(a > b)
+=======
+do
+a = 1
+loop(true) end
+
+//do loop(true)
+//a = 1
+//end
+>>>>>>> 2702c489c1a7ed470c0a73347565531be1bc703a
