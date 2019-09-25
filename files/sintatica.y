@@ -9,7 +9,7 @@ int yylex(void);
 %token TK_INPUT TK_PRINT
 
 %token TK_NOT
-%token TK_OP_ARIT TK_OP_REL TK_OP_LOG
+%token TK_OP_ARIT TK_OP_REL TK_OP_LOG TK_DECR TK_INCR
 
 %token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP
 
@@ -62,32 +62,6 @@ COMANDOS	: COMANDO COMANDOS
 				$$.traducao = "";
 			}
 			;
-/*
-loop(true) do\n
-a = 2\n
-end
-
-TK_LOOP(TK_BOOL) do\n
-TK_ID = TK_NUM\n
-end
-
-TK_LOOP(E) do\n
-TK_ID = TK_NUM\n
-end
-
-TK_LOOP(E) do\n
-ATR\n
-end
-
-TK_LOOP(E) do\n
-E\n
-end
-
-TK_LOOP(E) do TK_FIM_LINHA
-COMANDOS
-end
-
-*/
 COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
@@ -112,6 +86,7 @@ COMANDO 	: E
 
 				string new_label = label_generator();
 				string loop_label[2] = {loop_label_generator(), loop_label_end_generator()};
+				umap_label_add(new_label, BOOLEAN);
 				
 				$$.traducao = $3.traducao;
 				$$.traducao += "\n\t" + loop_label[0] + ":\n";
@@ -121,7 +96,7 @@ COMANDO 	: E
 				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n"; 
 			}
-			/*| TK_DO TK_LOOP '(' E ')' TK_FIM_LINHA COMANDOS TK_END//do while novo
+			| TK_DO TK_LOOP '(' E ')' TK_FIM_LINHA COMANDOS TK_END//do while novo
 			{
 				if($4.tipo != BOOLEAN)
 				{
@@ -138,19 +113,9 @@ COMANDO 	: E
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[0] + ";\n";
 				//$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n"; 
-			}*/
-			| TK_DO TK_FIM_LINHA COMANDOS TK_LOOP '(' E ')' TK_END//do while
+			}
+			/*| TK_DO TK_FIM_LINHA COMANDOS TK_LOOP '(' E ')' TK_END//do while
 			{
-				/*
-				do\n
-				1\n
-				loop(true) end
-
-				do\n
-				TK_NUM\n
-				loop(TK_BOOL) end
-				*/
-
 				if($6.tipo != BOOLEAN)
 				{
 					yyerror("condition errada");
@@ -167,10 +132,23 @@ COMANDO 	: E
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[0] + ";\n";
 				//$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n"; 
-			}
-			| TK_LOOP '(' ATR ';' COND ';' E ')' TK_DO TK_FIM_LINHA COMANDOS TK_END//while
+			}*/
+			| TK_LOOP '(' ATR ';' COND ';' CONT ')' TK_DO TK_FIM_LINHA COMANDOS TK_END//while
 			{
+				string new_label;
+				string loop_label[2] = {loop_label_generator(), loop_label_end_generator()};
 
+				umap_label_add(new_label, BOOLEAN);
+				
+				$$.traducao = $3.traducao;
+				$$.traducao += "\n\t" + loop_label[0] + ":\n";
+				$$.traducao += $5.traducao;
+				$$.traducao += "\t" + new_label + " = !(" + $5.label + ");\n";
+				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[1] + ";\n";
+				$$.traducao += $11.traducao;
+				$$.traducao += $7.traducao;
+				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
+				$$.traducao += "\t" + loop_label[1] + ":\n\n"; 
 			}
 			| TK_ID ',' REC_ATR ',' E
 			{
@@ -295,43 +273,13 @@ E 			: | '(' E ')'
 			{
 				$$.tipo = $1.tipo;
 				$$.traducao = $1.traducao;
-				//$$.label = $1.label;
+				$$.label = $1.label;
 			}
-			| TK_ID TK_OP_ARIT '=' E
+			| CONT
 			{
-				if(temp_umap[$1.label].tipo == 0)
-				{
-					yyerror("NO!!!");
-				}
-
-				variavel new_var;
-				atributos new_atr;
-
-				//new_atr.traducao = "";
-				//new_atr.label = label_generator();
-				$$.traducao = $1.traducao + $4.traducao;
-				$$.traducao += implicit_conversion_op(new_atr, $1, $2, $4, 0);
-				cout << new_atr.tipo;
-				//new_var.tipo = new_atr.tipo;
-				//temp_umap[new_atr.label] = new_var;
-
-				//no caso da variavel ja ter um tipo setado no codigo
-
-
-				if(temp_umap[$1.label].tipo != new_atr.tipo )
-				{
-					$$.tipo = new_atr.tipo;
-
-					//criar uma temporaria nova pra guardar o antigo valor
-					umap_label_add($$.label, $$.tipo);
-					var_umap[$1.traducao] = $$.label;
-				}
-				else
-				{
-					$$.tipo = $1.tipo;
-					temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
-					$$.label = $1.label;
-				}
+				$$.tipo = $1.tipo;
+				$$.traducao = $1.traducao;
+				$$.label = $1.label;
 			}
 			| ATR
 			{
@@ -458,6 +406,87 @@ COND 		: E TK_OP_REL E
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
 			}
+			;
+
+CONT		: TK_ID TK_OP_ARIT '=' E
+			{
+				if(temp_umap[$1.label].tipo == 0 || temp_umap[$1.label].tipo >= BOOLEAN)
+				{
+					yyerror("NO!!!");
+				}
+
+				$$.traducao = $4.traducao;
+
+				if($1.tipo != $4.tipo)
+				{
+					string new_label;
+					umap_label_add(new_label, $1.tipo);
+
+					$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[$1.tipo] + ") " + $4.label + ";\n";
+					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao + " " + new_label + ";\n";	
+				}
+				else
+				{
+					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao + " " + $4.label + ";\n";
+				}
+			}
+			| TK_ID TK_INCR
+			{
+				string new_label;
+				string value;
+
+				switch(temp_umap[var_umap[$1.traducao]].tipo)
+				{
+					case INT:
+					{
+						value = "1";
+					}
+					break;
+
+					case DOUBLE:
+					{
+						value = "1.0";
+					}
+					break;
+				}
+				
+				umap_label_add(new_label, $1.tipo);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				//$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label;
+				$$.traducao = "\t" + new_label + " = " + value + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " + " + new_label + ";\n";
+			}
+			| TK_ID TK_DECR
+			{
+				string new_label;
+				string value;
+
+				switch(temp_umap[var_umap[$1.traducao]].tipo)
+				{
+					case INT:
+					{
+						value = "1";
+					}
+					break;
+
+					case DOUBLE:
+					{
+						value = "1.0";
+					}
+					break;
+				}
+				
+				umap_label_add(new_label, $1.tipo);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				//$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label;
+				$$.traducao = "\t" + new_label + " = " + value + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " - " + new_label + ";\n";
+			}
+			;
 
 %%
 

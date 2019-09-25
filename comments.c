@@ -460,4 +460,66 @@ $$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";*/
 {
     $$.traducao = $1.traducao;
 }
+/*
+loop(i = 3; i > 0; i--) do
+a = i
+end
+
+i = 1;
+
+LO
+test = !(i > 0)
+if(test)
+goto LOEND
+COMANDOS
+CONT
+goto LO
+
+LO_END
+
+/*
+loop(true) do\n
+a = 2\n
+end
+
+TK_LOOP(TK_BOOL) do\n
+TK_ID = TK_NUM\n
+end
+
+TK_LOOP(E) do\n
+TK_ID = TK_NUM\n
+end
+
+TK_LOOP(E) do\n
+ATR\n
+end
+
+TK_LOOP(E) do\n
+E\n
+end
+
+TK_LOOP(E) do TK_FIM_LINHA
+COMANDOS
+end
+				/*
+
+				int new_type = get_new_type($1, $2, $4);//matrix[op_umap_str[$2.traducao]][$1.tipo][$4.tipo][0] - '0';
+
+				//no caso da variavel ja ter um tipo setado no codigo
+				if(temp_umap[$1.label].tipo != new_type )
+				{
+					$$.tipo = new_type;
+
+					//criar uma temporaria nova pra guardar o antigo valor
+					umap_label_add($$.label, $$.tipo);
+					var_umap[$1.traducao] = $$.label;
+				}
+				else
+				{
+					$$.tipo = $1.tipo;
+					$$.label = $1.label;
+				}
+				
+				$$.traducao = $4.traducao;
+				$$.traducao += implicit_conversion_op($$, $1, $2, $4, 0);
 */

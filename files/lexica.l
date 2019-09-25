@@ -43,9 +43,9 @@ COMPLEX "*"[^/]
 {DELIM} 	{}
 "not"		{return TK_NOT;}
 "if"		{return TK_IF;}
-"for"       {return TK_FOR;}
-"while"     {return TK_WHILE;}
 "end"		{return TK_END;}
+"++"        {return TK_INCR;}
+"--"        {return TK_DECR;}
 
 [(){}[\];,]	{ return *yytext; }
 
@@ -75,4 +75,6 @@ COMPLEX "*"[^/]
 "neq"		{yylval.traducao = yytext; return TK_OP_REL;}
 "and"		{return TK_AND;}
 "or"		{return TK_OR;}
+"for"       {return TK_FOR;}
+"while"     {return TK_WHILE;}
 */

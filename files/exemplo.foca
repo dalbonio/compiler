@@ -1,7 +1,7 @@
-do
-a = 1
-loop(true) end
+loop(i = 2; i > 0; i--) do
+a = i
+end
 
-//do loop(true)
-//a = 1
-//end
+loop(i eq a) do
+a = 2
+end

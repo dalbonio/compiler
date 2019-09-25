@@ -19,6 +19,7 @@ void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 string loop_label_generator();
 string loop_label_end_generator();
+int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
 
 void yyerror( string MSG )
 {
@@ -234,7 +235,10 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	}
 
 	op_translate.replace(0, 1, "");
+	//cout << op_translate << endl;
 	replace_op(op_translate, new_label, atr_1.label, atr_3.label, atr_main.label, op_umap[op]);
+	//cout << op_translate << endl;
+	//cout << new_label << endl << atr_1.label << endl << atr_3.label << endl << atr_main.label << endl << op_umap[op] << endl;
 	
 	return op_translate;
 }
@@ -247,6 +251,20 @@ string loop_label_generator()
 string loop_label_end_generator()
 {
 	return string("LOOP_END_") + to_string(loopContador++);
+}
+
+int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
+{
+	int op;
+	int new_type;
+	string new_label;
+	string op_translate;
+
+	op = op_umap_str[atr_2.traducao];
+	op_translate = matrix[op][atr_1.tipo][atr_3.tipo];
+	new_type = op_translate[0] - '0';
+
+	return new_type;
 }
 
 #endif
