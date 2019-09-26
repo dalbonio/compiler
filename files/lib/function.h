@@ -49,7 +49,7 @@ string declare_variables()
 		{
 			it->second.tipo = INT;
 		}
-		
+
 		total += "\t" + tipo_umap[it->second.tipo] + " " + it->first + ";\n";
 	}
 
@@ -79,7 +79,7 @@ string get_id_label(string user_label)
 void initialize_tipo_umap()
 {
 	tipo_umap[INT] = "int";
-	tipo_umap[STRING] = "string";
+	tipo_umap[STRING] = "char*";
 	tipo_umap[BOOLEAN] = "int";
 	tipo_umap[DOUBLE] = "double";
 
@@ -239,7 +239,7 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	replace_op(op_translate, new_label, atr_1.label, atr_3.label, atr_main.label, op_umap[op]);
 	//cout << op_translate << endl;
 	//cout << new_label << endl << atr_1.label << endl << atr_3.label << endl << atr_main.label << endl << op_umap[op] << endl;
-	
+
 	return op_translate;
 }
 

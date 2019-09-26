@@ -60,7 +60,7 @@ COMPLEX "*"[^/]
 {BOOL}      { yylval.tipo = BOOLEAN; yylval.traducao = yytext; return TK_BOOL; }
 {NUM}		{ yylval.tipo = INT; yylval.traducao = yytext; return TK_NUM; }
 {REAL}      { yylval.tipo = DOUBLE; yylval.traducao = yytext; return TK_REAL; }
-{STR}       {}
+{STR}       { yylval.tipo = STRING; yylval.traducao = yytext; return TK_STR; }
 
 {ID}		{ yylval.traducao = yytext; yylval.label = get_id_label(yytext); return TK_ID; }
 

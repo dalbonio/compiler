@@ -5,7 +5,7 @@ int yylex(void);
 %}
 
 %token TK_ID
-%token TK_NUM TK_REAL TK_BOOL
+%token TK_NUM TK_REAL TK_BOOL TK_STR
 %token TK_INPUT TK_PRINT
 
 %token TK_NOT
@@ -301,6 +301,22 @@ E 			: | '(' E ')'
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = "\t" + $$.label + " = " + ($1.traducao == "true"? "1" : "0") + ";\n";
 				//$$.resultado = 0;
+			}
+			| TK_STR
+			{
+				$$.tipo = $1.tipo;
+				string str = $1.traducao;
+				str = str.substr(1, str.length() - 2); //remove quotes from lex rule
+
+				replace_all(str, "\\n", ""); //feature para permitir string de varias linhas
+
+				string label_tamanho = label_generator();
+				umap_label_add($$.label, $$.tipo);
+				umap_label_add(label_tamanho, INT);
+
+				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
+				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+				$$.traducao += "\tstrcat(" + $$.label + ", \"" + str + "\");\n"; 
 			}
 			| TK_ID
 			{
