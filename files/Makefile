@@ -5,6 +5,12 @@ all:
 		g++ -o glf y.tab.c -ll -std=c++11 -DYYDEBUG
 		./glf < exemplo.foca
 
+d:
+		clear
+		lex lexica.l
+		yacc -t -d sintatica.y --debug --verbose
+		g++ -o glf y.tab.c -ll -std=c++11 -DYYDEBUG
+		./glf < exemplo.foca 2> debug.cpp
 
 
 #NORMAL COMPILING:

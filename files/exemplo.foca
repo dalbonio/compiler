@@ -1,1 +1,9 @@
-a = input(string)
+loop(true) do
+1
+end do
+1
+loop(true) end
+
+loop(i = 1; i < 5; i++) do
+1
+end
