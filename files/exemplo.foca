@@ -1,7 +1,1 @@
-loop(i = 2; i > 0; i--) do
-a = i
-end
-
-loop(i eq a) do
-a = 2
-end
+a = 3

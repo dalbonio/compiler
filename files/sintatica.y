@@ -35,6 +35,7 @@ S 			: BLOCO
 				cout << "\n/*Compilador FOCA*/\n";
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
 				cout <<	"\nint main(void)\n{\n";
+				cout << "\tchar buffer[700];\n";
 				cout << declare_variables();
 				cout << $1.traducao << "\n\treturn 0;\n}" << endl;
 			}
@@ -49,7 +50,7 @@ BLOCO		: COMANDOS
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
 				$$.label = "";
-				$$.traducao = $1.traducao + $2.traducao;
+				$$.traducao = $1.traducao + $3.traducao;
 			}
 			| //REGRA VAZIA
 			{
