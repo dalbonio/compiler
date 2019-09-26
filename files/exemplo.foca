@@ -1,1 +1,1 @@
-a = "235"
+a = input(string)

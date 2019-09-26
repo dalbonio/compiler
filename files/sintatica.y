@@ -236,13 +236,12 @@ E 			: | '(' E ')'
 				if($3.label == "string")
 				{
 					$$.tipo = STRING;
-					$$.label = label_generator();
-					string label_tamanho = label_generator();
+					string label_tamanho;
 
 					umap_label_add($$.label, STRING);
 					umap_label_add(label_tamanho, INT);
 
-					$$.traducao = "\t" + string("cin >> buffer;\n";
+					$$.traducao = "\t" + string("cin >> buffer;\n");
 					$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
 					$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
 					$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
@@ -263,7 +262,7 @@ E 			: | '(' E ')'
 				umap_label_add($$.label, STRING);
 				umap_label_add(label_tamanho, INT);
 
-				$$.traducao = "\t" + string("cin >> buffer;\n";
+				$$.traducao = "\t" + string("cin >> buffer;\n");
 				$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
 				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
