@@ -233,9 +233,40 @@ E 			: | '(' E ')'
 					yyerror("nao tem como fazer input em boolean");
 				}
 
-				$$.tipo = tipo_umap_str[$3.label];
-				umap_label_add($$.label, $$.tipo);
-				$$.traducao = "\t" + string("cin >> ") + $$.label + ";\n";
+				if($3.label == "string")
+				{
+					$$.tipo = STRING;
+					$$.label = label_generator();
+					string label_tamanho = label_generator();
+
+					umap_label_add($$.label, STRING);
+					umap_label_add(label_tamanho, INT);
+
+					$$.traducao = "\t" + string("cin >> buffer;\n";
+					$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
+					$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+					$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
+				}
+				else
+				{
+					$$.tipo = tipo_umap_str[$3.label];
+					umap_label_add($$.label, $$.tipo);
+					$$.traducao = "\t" + string("cin >> ") + $$.label + ";\n";
+				}
+			}
+			| TK_INPUT '(' ')'
+			{
+				$$.tipo = STRING;
+				$$.label = label_generator();
+				string label_tamanho = label_generator();
+
+				umap_label_add($$.label, STRING);
+				umap_label_add(label_tamanho, INT);
+
+				$$.traducao = "\t" + string("cin >> buffer;\n";
+				$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
+				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 			}
 			| TK_OP_ARIT E
 			{
@@ -316,7 +347,7 @@ E 			: | '(' E ')'
 
 				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
 				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
-				$$.traducao += "\tstrcat(" + $$.label + ", \"" + str + "\");\n"; 
+				$$.traducao += "\tstrcpy(" + $$.label + ", \"" + str + "\");\n";
 			}
 			| TK_ID
 			{
