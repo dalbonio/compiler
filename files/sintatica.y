@@ -30,7 +30,7 @@ int yylex(void);
 
 %%
 
-S 			: BLOCO
+S 			: BP //bloco principal
 			{
 				cout << "\n/*Compilador FOCA*/\n";
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
@@ -41,9 +41,15 @@ S 			: BLOCO
 			}
 			;
 
-BLOCO		: COMANDOS
+BP			: COMANDOS
 			{
 				$$.traducao = $1.traducao;
+			}
+			;
+
+BLOCO		: TK_DO TK_FIM_LINHA COMANDOS TK_END
+			{
+				$$.traducao = $3.traducao;
 			}
 			;
 
@@ -73,7 +79,7 @@ COMANDO 	: E
 					$$.traducao =  $3.traducao + "\t" + string("cout >> ") + $$.label + ";\n";
 				}
 			}
-			| TK_LOOP '(' E ')'	TK_DO TK_FIM_LINHA COMANDOS TK_END//while
+			| TK_LOOP '(' E ')'	BLOCO//while
 			{
 				if($3.tipo != BOOLEAN)
 				{
@@ -88,11 +94,11 @@ COMANDO 	: E
 				$$.traducao += "\n\t" + loop_label[0] + ":\n";
 				$$.traducao += "\t" + new_label + " = !(" + $3.label + ");\n";
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[1] + ";\n";
-				$$.traducao += $7.traducao;
+				$$.traducao += $4.traducao;
 				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n";
 			}
-			| TK_DO TK_LOOP '(' E ')' TK_FIM_LINHA COMANDOS TK_END//do while novo
+			| BLOCO TK_LOOP '(' E ')'//do while
 			{
 				if($4.tipo != BOOLEAN)
 				{
@@ -101,35 +107,17 @@ COMANDO 	: E
 
 				string new_label = $4.label;
 				string loop_label[2] = {loop_label_generator(), loop_label_end_generator()};
+				cout << $4.label;
 
 				$$.traducao = $4.traducao;
 				$$.traducao += "\n\t" + loop_label[0] + ":\n";
-				$$.traducao += $7.traducao;
+				$$.traducao += $1.traducao;
 				//$$.traducao += "\t" + new_label + " = !(" + $6.label + ");\n";
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[0] + ";\n";
 				//$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n";
 			}
-			/*| TK_DO TK_FIM_LINHA COMANDOS TK_LOOP '(' E ')' TK_END//do while
-			{
-				if($6.tipo != BOOLEAN)
-				{
-					yyerror("condition errada");
-				}
-
-				string new_label = $6.label;
-				string loop_label[2] = {loop_label_generator(), loop_label_end_generator()};
-				cout << $6.label;
-
-				$$.traducao = $6.traducao;
-				$$.traducao += "\n\t" + loop_label[0] + ":\n";
-				$$.traducao += $3.traducao;
-				//$$.traducao += "\t" + new_label + " = !(" + $6.label + ");\n";
-				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[0] + ";\n";
-				//$$.traducao += "\tgoto " + loop_label[0] + ";\n";
-				$$.traducao += "\t" + loop_label[1] + ":\n\n";
-			}*/
-			| TK_LOOP '(' ATR ';' COND ';' CONT ')' TK_DO TK_FIM_LINHA COMANDOS TK_END//while
+			| TK_LOOP '(' ATR ';' COND ';' CONT ')' BLOCO //for
 			{
 				string new_label;
 				string loop_label[2] = {loop_label_generator(), loop_label_end_generator()};
@@ -141,7 +129,7 @@ COMANDO 	: E
 				$$.traducao += $5.traducao;
 				$$.traducao += "\t" + new_label + " = !(" + $5.label + ");\n";
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[1] + ";\n";
-				$$.traducao += $11.traducao;
+				$$.traducao += $9.traducao;
 				$$.traducao += $7.traducao;
 				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n";
