@@ -1,21 +1,26 @@
 all:
 		clear
-		lex lexica.l
-		yacc -t -d sintatica.y --debug --verbose
-		g++ -o glf y.tab.c -ll -std=c++11 -DYYDEBUG
-		./glf < exemplo.foca
-
+		lex -d lexica.l
+		yacc -t -d sintatica.y --verbose
+		g++ -o glf y.tab.c -ll -std=c++11
+		./glf < exemplo.foca 2> y_debug.cpp
+		@rm lex.yy.c
+		@rm y.tab.c
+		@rm y.tab.h
+		@rm glf
 
 
 #NORMAL COMPILING:
-#yacc -d sintatica.y
+#yacc -t sintatica.y
 #g++ -o glf y.tab.c -ll -std=c++11
 #./glf < exemplo.foca
 
-#DEBUG YACC:
+#DEBUG YACC AND LEX:
+#put yy_flex_debug = 1; and
 #put yydebug = 1; on the main() of .y file
+#lex -d lexica.l
 #yacc -t -d sintatica.y
-#g++ -o glf y.tab.c -ll -std=c++11 -DYYDEBUG
+#g++ -o glf y.tab.c -ll -std=c++11
 #./glf < exemplo.foca
 
 #SAVE DEBUG MESSAGE OR SAVE OUTPUT:

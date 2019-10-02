@@ -9,9 +9,9 @@ int yylex(void);
 %token TK_INPUT TK_PRINT
 
 %token TK_NOT
-%token TK_OP_ARIT TK_OP_REL TK_OP_LOG TK_DECR TK_INCR
+%token TK_OP_ARIT TK_OP_REL TK_OP_LOG TK_DECR TK_INCR TK_CONT
 
-%token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP
+%token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSE
 
 %token TK_CASTING
 %token TK_FIM TK_ERROR
@@ -57,6 +57,12 @@ COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
 				$$.label = "";
 				$$.traducao = $1.traducao + $3.traducao;
+				//replace_all($2.traducao, "\n", "A");
+				//cout << $2.traducao;
+			}
+			| TK_FIM_LINHA COMANDOS
+			{
+				$$.traducao = $2.traducao;
 			}
 			| //REGRA VAZIA
 			{
@@ -184,7 +190,7 @@ COMANDO 	: E
 			}
 			;
 
-E 			: | '(' E ')'
+E 			: '(' E ')'
 			{
 
 				$$.tipo = $2.tipo;
@@ -278,7 +284,9 @@ E 			: | '(' E ')'
 
 				$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
+				
 				$$.traducao += implicit_conversion_op($$, $1, $2, $3, 0);
+				
 				new_var.tipo = $$.tipo;
 				temp_umap[$$.label] = new_var;
 				//$$.resultado = $1.resultado + $3.resultado;
@@ -438,26 +446,26 @@ COND 		: E TK_OP_REL E
 			}
 			;
 
-CONT		: TK_ID TK_OP_ARIT '=' E
+CONT		: TK_ID TK_CONT E
 			{
 				if(temp_umap[$1.label].tipo == 0 || temp_umap[$1.label].tipo >= BOOLEAN)
 				{
 					yyerror("NO!!!");
 				}
 
-				$$.traducao = $4.traducao;
+				$$.traducao = $3.traducao;
 
-				if($1.tipo != $4.tipo)
+				if($1.tipo != $3.tipo)
 				{
 					string new_label;
 					umap_label_add(new_label, $1.tipo);
 
-					$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[$1.tipo] + ") " + $4.label + ";\n";
-					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao + " " + new_label + ";\n";
+					$$.traducao += "\t" + new_label + " = " + "(" + tipo_umap[$1.tipo] + ") " + $3.label + ";\n";
+					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao[0] + " " + new_label + ";\n";
 				}
 				else
 				{
-					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao + " " + $4.label + ";\n";
+					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao[0] + " " + $3.label + ";\n";
 				}
 			}
 			| TK_ID TK_INCR
@@ -526,6 +534,7 @@ int yyparse();
 
 int main( int argc, char* argv[] )
 {
+	yy_flex_debug = 1;
 	yydebug = 1;
 	initialize_tipo_umap();
 	initialize_matrix();
