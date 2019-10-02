@@ -19,15 +19,14 @@ TIPO int|double|boolean|string
 OP_REL >=|<=|<|>|eq|neq
 OP_LOG and|or
 
-J_LINE (\n)+
-
 %%
 
-{J_LINE}	                { contadorLinha += strlen(yytext); yylval.traducao = yytext; return TK_FIM_LINHA; }
-<<EOF>>		                { strcat(yytext, "\n"); return 0; }
+<<EOF>>		                { static int once = 0; return once++ ? 0: TK_FIM_LINHA; }
 
 "//"(.*[ \t]*.*)*[\n]+      {}
 "\\\n"		                {}
+"\n"                        { yylval.traducao = yytext; contadorLinha++; return TK_FIM_LINHA; }
+
 "input"                     { return TK_INPUT; }
 "print"                     { return TK_PRINT; }
 "loop"		                { return TK_LOOP; }
@@ -62,10 +61,4 @@ J_LINE (\n)+
 %%
 
 /*
-%s newstate
-START "/*"
-END "*(/)"
-SIMPLE [^*]
-SPACE [ \t\n]
-COMPLEX "*"[^/]
 */

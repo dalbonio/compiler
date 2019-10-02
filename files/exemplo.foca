@@ -1,1 +1,7 @@
-a = 1
+if(1 > 0) do
+    print(1)
+end
+
+loop(2 > 3.0) do
+    1
+end

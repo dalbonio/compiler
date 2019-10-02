@@ -522,4 +522,13 @@ end
 				
 				$$.traducao = $4.traducao;
 				$$.traducao += implicit_conversion_op($$, $1, $2, $4, 0);
+%s newstate
+START "/*"
+END "*(/)"
+SIMPLE [^*]
+SPACE [ \t\n]
+COMPLEX "*"[^/]
+strcat(yytext, "\n"); return 0;
+J_LINE (\n)+
+{J_LINE}	                { contadorLinha += strlen(yytext); cout << contadorLinha << endl; yylval.traducao = yytext; return TK_FIM_LINHA; }
 */
