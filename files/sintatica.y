@@ -11,7 +11,7 @@ int yylex(void);
 %token TK_NOT
 %token TK_OP_ARIT TK_OP_REL TK_OP_LOG TK_DECR TK_INCR TK_CONT
 
-%token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSE
+%token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSEIF TK_ELSE
 
 %token TK_CASTING
 %token TK_FIM TK_ERROR
@@ -52,6 +52,40 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS TK_END
 				$$.traducao = $3.traducao;
 			}
 			;
+
+BL_IF	: TK_DO COMANDOS BL_ELSE
+		{
+			$$.traducao =  $2.traducao;
+			$$.traducao += $3.traducao;
+		};
+
+BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
+		{
+			if($3.tipo != BOOLEAN)
+			{
+				yyerror("condition errada");
+			}
+
+			
+			$$.traducao = "\t}\n";
+			$$.traducao += "\telse\n\t{\n" + $3.traducao;
+			$$.traducao += "\n\tif(";
+			$$.traducao += $3.label;
+			$$.traducao += ")\n\t{\n";
+			$$.traducao += $5.traducao;
+			$$.traducao += "\n\t}";
+		}
+		| TK_ELSE TK_DO COMANDOS TK_END
+		{
+			$$.traducao =  "\t\telse\n";
+			$$.traducao += "\t{\n";
+			$$.traducao += $3.traducao;
+			$$.traducao += "\t}\n";
+		}
+		| TK_END
+		{
+			$$.traducao = "\t}";
+		};  	
 
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
@@ -148,7 +182,7 @@ COMANDO 	: E
 				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n";
 			}
-			| TK_IF '(' E ')' BLOCO
+			| TK_IF '(' E ')' BL_IF
 			{
 				if($3.tipo != BOOLEAN)
 				{
@@ -159,25 +193,7 @@ COMANDO 	: E
 				$$.traducao += "\tif(" + $3.label + ")\n";
 				$$.traducao += "\t{\n";
 				$$.traducao += $5.traducao;
-				$$.traducao += "\t}\n";
-			}
-			| TK_IF '(' E ')' BLOCO TK_FIM_LINHA TK_ELSE BLOCO
-			{
-				if($3.tipo != BOOLEAN)
-				{
-					yyerror("Erro\n");
-				}
-
-				$$.traducao = $3.traducao;
-				$$.traducao += "\tif(" + $3.label + ")\n";
-				$$.traducao += "\t{\n";
-				$$.traducao += $5.traducao;
-				$$.traducao += "\t}\n";
-				$$.traducao += "\telse\n";
-				$$.traducao += "\t{\n";
-				$$.traducao += $8.traducao;
-				$$.traducao += "\t}\n";
-			}
+			}			
 			| TK_ID ',' REC_ATR ',' E
 			{
 				string newlabel;

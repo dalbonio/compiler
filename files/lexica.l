@@ -32,6 +32,7 @@ OP_LOG and|or
 "loop"		                { return TK_LOOP; }
 "if"		                { return TK_IF; }
 "else"                      { return TK_ELSE; }
+"elif"						{ return TK_ELSEIF; }
 "do"		                { return TK_DO; }
 "end"		                { return TK_END; }
 "not"		                { return TK_NOT; }
