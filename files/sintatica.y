@@ -66,7 +66,7 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 				yyerror("condition errada");
 			}
 
-			
+
 			$$.traducao = "\t}\n";
 			$$.traducao += "\telse\n\t{\n" + $3.traducao;
 			$$.traducao += "\n\tif(";
@@ -85,7 +85,7 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 		| TK_END
 		{
 			$$.traducao = "\t}";
-		};  	
+		};
 
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
@@ -193,7 +193,7 @@ COMANDO 	: E
 				$$.traducao += "\tif(" + $3.label + ")\n";
 				$$.traducao += "\t{\n";
 				$$.traducao += $5.traducao;
-			}			
+			}
 			| TK_ID ',' REC_ATR ',' E
 			{
 				string newlabel;
@@ -400,6 +400,7 @@ E 			: '(' E ')'
 			}
 			| TK_ID
 			{
+				$$.label = get_id_label($1.traducao);
 				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
 
 				if ($$.tipo == 0)
@@ -407,9 +408,7 @@ E 			: '(' E ')'
 					yyerror("variable " + $1.traducao + " not declared");
 				}
 
-				$$.label = $1.label;
 				$$.traducao = "";
-				//$$.resultado = 0;
 			}
 			;
 
@@ -442,6 +441,7 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 				$$.label = "";
 				$$.traducao = $3.traducao + "\t" + newlabel + " = " + $3.label + ";\n";
 
+				$1.label = get_id_label($1.traducao);
 				multiple_atr_queue.push($1.label);
 				multiple_atr_stack.push(pair_exp);
 			}
@@ -450,6 +450,7 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
+				$1.label = get_id_label($1.traducao);
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
 					$$.tipo = $3.tipo;

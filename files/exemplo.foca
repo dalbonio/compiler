@@ -1,6 +1,3 @@
-if (true) do
 a = 1
-elif (true) do
-c = 1
-end
-
+b = 1
+c = a + b
