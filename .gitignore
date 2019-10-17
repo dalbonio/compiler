@@ -3,4 +3,5 @@ files/y.tab.c
 files/y.tab.h
 files/glf
 files/y_debug.cpp
+files/debug.cpp
 files/y.output

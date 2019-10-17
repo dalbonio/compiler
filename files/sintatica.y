@@ -137,7 +137,7 @@ COMANDO 	: E
 				$$.traducao += $3.traducao;
 				$$.traducao += "\t" + new_label + " = !(" + $3.label + ");\n";
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + loop_label[1] + ";\n";
-				$$.traducao += $4.traducao;
+				$$.traducao += $5.traducao;
 				$$.traducao += "\tgoto " + loop_label[0] + ";\n";
 				$$.traducao += "\t" + loop_label[1] + ":\n\n";
 			}
@@ -338,9 +338,9 @@ E 			: '(' E ')'
 
 				$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
-				
+
 				$$.traducao += implicit_conversion_op($$, $1, $2, $3, 0);
-				
+
 				new_var.tipo = $$.tipo;
 				temp_umap[$$.label] = new_var;
 				//$$.resultado = $1.resultado + $3.resultado;
