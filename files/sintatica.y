@@ -16,6 +16,7 @@ int yylex(void);
 %token TK_CASTING
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
+%token TK_SWITCH TK_CASE TK_DEFAULT
 
 %start S
 
@@ -66,7 +67,6 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 				yyerror("condition errada");
 			}
 
-			
 			$$.traducao = "\t}\n";
 			$$.traducao += "\telse\n\t{\n" + $3.traducao;
 			$$.traducao += "\n\tif(";
@@ -85,7 +85,34 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 		| TK_END
 		{
 			$$.traducao = "\t}";
-		};  	
+		};
+
+REC_NUM:	TK_NUM ',' REC_NUM
+{
+
+}
+| TK_NUM ':' TK_FIM_LINHA
+{
+	
+};
+
+BL_DEFAULT: TK_DEFAULT ':' COMANDOS TK_END
+{
+	
+};
+
+BL_CASE: TK_CASE REC_NUM COMANDOS BL_CASE
+{
+	
+}
+| BL_DEFAULT
+{
+};
+
+BL_SWITCH:	TK_DO TK_FIM_LINHA BL_CASE
+			{
+
+			};
 
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
@@ -122,6 +149,15 @@ COMANDO 	: E
 					$$.traducao =  $3.traducao + "\t" + string("cout >> ") + $3.label + ";\n";
 				}
 			}
+
+			| TK_SWITCH '(' TK_ID ')' BL_SWITCH
+			{
+				if( $3.tipo != INT )
+				{
+					yyerror(string("Tipo ") + " invalido para comando SWITCH.");
+				}
+			}
+
 			| TK_LOOP '(' E ')'	BLOCO//while
 			{
 				if($3.tipo != BOOLEAN)

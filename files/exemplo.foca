@@ -1,6 +1,5 @@
-if (true) do
-a = 1
-elif (true) do
-c = 1
+a = 3
+switch (a) do
+	default:
+		b = 3
 end
-
