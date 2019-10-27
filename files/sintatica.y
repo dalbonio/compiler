@@ -48,7 +48,7 @@ BP			: COMANDOS
 			}
 			;
 
-BLOCO		: TK_DO TK_FIM_LINHA COMANDOS TK_END
+BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 			{
 				$$.traducao = $3.traducao;
 			}
@@ -73,18 +73,18 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 			$$.traducao += $3.label;
 			$$.traducao += ")\n\t{\n";
 			$$.traducao += $5.traducao;
-			$$.traducao += "\n\t}";
+			$$.traducao += "\n\t}\n";
 		}
-		| TK_ELSE TK_DO COMANDOS TK_END
+		| TK_ELSE TK_DO COMANDOS BL_END
 		{
 			$$.traducao =  "\t\telse\n";
 			$$.traducao += "\t{\n";
 			$$.traducao += $3.traducao;
 			$$.traducao += "\t}\n";
 		}
-		| TK_END
+		| BL_END
 		{
-			$$.traducao = "\t}";
+			$$.traducao = "\t}\n";
 		};
 
 REC_NUM:	TK_NUM ',' REC_NUM
@@ -96,7 +96,7 @@ REC_NUM:	TK_NUM ',' REC_NUM
 
 };
 
-BL_DEFAULT: TK_DEFAULT ':' COMANDOS TK_END
+BL_DEFAULT: TK_DEFAULT ':' COMANDOS BL_END
 {
 
 };
@@ -248,7 +248,7 @@ COMANDO 	: E
 
 				while(!multiple_atr_queue.empty() || !multiple_atr_stack.empty() )
 				{
-					string var = multiple_atr_queue.front();
+					string var = multiple_atr_queue.back();
 					pair<string, int> exp = multiple_atr_stack.top();
 
 					temp_umap[var].tipo = exp.second;
@@ -487,7 +487,8 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
-				$1.label = get_id_label($1.traducao);
+				$1.label = get_current_context_id_label($1.traducao);
+				cout << $1.label;
 				//cout << $1.traducao << $1.label << endl;
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
@@ -501,7 +502,7 @@ ATR 		: TK_ID '=' E
 				else
 				{
 					$$.tipo = $3.tipo;
-					auto& cur_umap = context_stack.front();
+					auto& cur_umap = context_stack.back();
 					temp_umap[cur_umap[$1.traducao]].tipo = $3.tipo;
 					$$.label = $1.label;
 				}
@@ -617,8 +618,13 @@ CONT		: TK_ID TK_CONT E
 				//$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label;
 				$$.traducao = "\t" + new_label + " = " + value + ";\n";
 				$$.traducao += "\t" + $1.label + " = " + $1.label + " - " + new_label + ";\n";
-			}
-			;
+			};
+
+BL_END:		TK_END
+			{
+				endContext();
+				$$.traducao = "";
+			};
 
 %%
 

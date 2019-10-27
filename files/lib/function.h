@@ -155,11 +155,29 @@ string search_variable(string var_name)
 	return "0";
 }
 
+string get_current_context_id_label(string user_label)
+{
+	auto& lbl_umap = context_stack.back();
+	if(lbl_umap.find(user_label) == lbl_umap.end() )
+	{
+		string new_label = label_generator();
+		variavel new_var;
+		new_var.user_label = user_label;
+		new_var.tipo = 0;
+
+		lbl_umap[user_label] = new_label;
+		temp_umap[new_label] = new_var;
+
+		return new_label;
+	}
+
+	return lbl_umap[user_label];
+}
+
 string get_id_label(string user_label)
 {
-	auto& lbl_umap = context_stack.front();
+	auto& lbl_umap = context_stack.back();
 	string label = search_variable(user_label);
-	cout << user_label << " " << label << endl;
 	if(label == "0")
 	{
 		string new_label = label_generator();
@@ -187,7 +205,7 @@ void replace_op(string& op_type, string new_label, string first_label, string se
 
 string add_variable_in_current_context(string var_name, int tipo)
 {
-	auto cur_umap = context_stack.front();
+	auto cur_umap = context_stack.back();
 	string new_label;
 	umap_label_add(new_label, tipo);
 	cur_umap[var_name] = new_label;
@@ -289,6 +307,16 @@ int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
 	new_type = op_translate[0] - '0';
 
 	return new_type;
+}
+
+void pushContext()
+{
+	context_stack.push_back(unordered_map<string, string>());
+}
+
+void endContext()
+{
+	context_stack.pop_back();
 }
 
 #endif

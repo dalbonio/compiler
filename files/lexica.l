@@ -33,11 +33,11 @@ OP_LOG and|or
 "if"		                { return TK_IF; }
 "else"                      { return TK_ELSE; }
 "elif"						{ return TK_ELSEIF; }
-"do"		                { return TK_DO; }
+"do"		                { pushContext(); return TK_DO; }
 "end"		                { return TK_END; }
 "not"		                { return TK_NOT; }
 "switch"					{ return TK_SWITCH; }
-"case"					{ return TK_CASE; }
+"case"					    { return TK_CASE; }
 "default"					{ return TK_DEFAULT; }
 
 "++"                        { return TK_INCR; }
