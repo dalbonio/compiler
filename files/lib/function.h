@@ -36,9 +36,12 @@ string declare_variables()
 {
 	string total = string("");
 
-	for(auto it = var_umap.begin(); it != var_umap.end(); it++)
+	for(int i = context_stack.size() - 1; i >= 0 ; i--)
 	{
-		total += "\t//" + it->first + " = " + it->second + "\n";
+		for(auto it = context_stack[i].begin(); it != context_stack[i].end(); it++)
+		{
+			total += "\t//" + it->first + " = " + it->second + "\n";
+		}
 	}
 
 	total += "\n";
@@ -57,25 +60,6 @@ string declare_variables()
 
 	return total;
 }
-
-string get_id_label(string user_label)
-{
-	if(var_umap.find(user_label) == var_umap.end())
-	{
-		string new_label = label_generator();
-		variavel new_var;
-		new_var.user_label = user_label;
-		new_var.tipo = 0;
-
-		var_umap[user_label] = new_label;
-		temp_umap[new_label] = new_var;
-
-		return new_label;
-	}
-
-	return var_umap[user_label];
-}
-
 void initialize_tipo_umap()
 {
 	tipo_umap[INT] = "int";
@@ -154,11 +138,43 @@ void replace_all(std::string & data, std::string toSearch, std::string replaceSt
 void umap_label_add(string& new_label, int new_tipo)
 {
 	new_label = label_generator();
-
 	variavel new_var;
 	new_var.tipo = new_tipo;
 	temp_umap[new_label] = new_var;
 }
+
+string search_variable(string var_name)
+{
+	for(int i = context_stack.size() - 1; i >= 0 ; i--)
+	{
+		auto lbl_umap = context_stack[i];
+		//caso não encontre a variavel no contexto mais proximo, tentar no proximo
+		if(lbl_umap.find(var_name) != lbl_umap.end() )
+			return lbl_umap[var_name];
+	}
+	return "0";
+}
+
+string get_id_label(string user_label)
+{
+	auto& lbl_umap = context_stack.front();
+	string label = search_variable(user_label);
+	cout << user_label << " " << label << endl;
+	if(label == "0")
+	{
+		string new_label = label_generator();
+		variavel new_var;
+		new_var.user_label = user_label;
+		new_var.tipo = 0;
+
+		lbl_umap[user_label] = new_label;
+		temp_umap[new_label] = new_var;
+
+		return new_label;
+	}
+	return label;
+}
+
 
 void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op)
 {
@@ -167,6 +183,14 @@ void replace_op(string& op_type, string new_label, string first_label, string se
 	replace_all(op_type, "second_label", second_label);
 	replace_all(op_type, "main_label", main_label);
 	replace_all(op_type, "operator", op);
+}
+
+string add_variable_in_current_context(string var_name, int tipo)
+{
+	auto cur_umap = context_stack.front();
+	string new_label;
+	umap_label_add(new_label, tipo);
+	cur_umap[var_name] = new_label;
 }
 
 void initialize_op_umap()

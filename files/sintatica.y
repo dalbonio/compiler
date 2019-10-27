@@ -67,10 +67,6 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 				yyerror("condition errada");
 			}
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 78a95774f26e449deda451872799298b32388f94
 			$$.traducao = "\t}\n";
 			$$.traducao += "\telse\n\t{\n" + $3.traducao;
 			$$.traducao += "\n\tif(";
@@ -90,8 +86,6 @@ BL_ELSE	: TK_ELSEIF '(' E ')' BL_IF
 		{
 			$$.traducao = "\t}";
 		};
-<<<<<<< HEAD
-=======
 
 REC_NUM:	TK_NUM ',' REC_NUM
 {
@@ -99,17 +93,17 @@ REC_NUM:	TK_NUM ',' REC_NUM
 }
 | TK_NUM ':' TK_FIM_LINHA
 {
-	
+
 };
 
 BL_DEFAULT: TK_DEFAULT ':' COMANDOS TK_END
 {
-	
+
 };
 
 BL_CASE: TK_CASE REC_NUM COMANDOS BL_CASE
 {
-	
+
 }
 | BL_DEFAULT
 {
@@ -119,7 +113,6 @@ BL_SWITCH:	TK_DO TK_FIM_LINHA BL_CASE
 			{
 
 			};
->>>>>>> 78a95774f26e449deda451872799298b32388f94
 
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 			{
@@ -444,7 +437,8 @@ E 			: '(' E ')'
 			| TK_ID
 			{
 				$$.label = get_id_label($1.traducao);
-				$$.tipo = temp_umap[var_umap[$1.traducao]].tipo;
+				//cout << $$.label << endl;
+				$$.tipo = temp_umap[$$.label].tipo;
 
 				if ($$.tipo == 0)
 				{
@@ -494,18 +488,21 @@ ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
 				$1.label = get_id_label($1.traducao);
+				//cout << $1.traducao << $1.label << endl;
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
 					$$.tipo = $3.tipo;
 
 					//criar uma temporaria nova pra guardar o antigo valor
-					umap_label_add($$.label, $$.tipo);
-					var_umap[$1.traducao] = $$.label;
+					$$.label = add_variable_in_current_context($1.traducao, $$.tipo);
+					//umap_label_add($$.label, $$.tipo);
+					//var_umap[$1.traducao] = $$.label;
 				}
 				else
 				{
 					$$.tipo = $3.tipo;
-					temp_umap[var_umap[$1.traducao]].tipo = $3.tipo;
+					auto& cur_umap = context_stack.front();
+					temp_umap[cur_umap[$1.traducao]].tipo = $3.tipo;
 					$$.label = $1.label;
 				}
 
@@ -633,6 +630,7 @@ int main( int argc, char* argv[] )
 {
 	yy_flex_debug = 1;
 	yydebug = 1;
+	context_stack.push_back(unordered_map<string, string>());
 	initialize_tipo_umap();
 	initialize_matrix();
 	initialize_op_umap();
