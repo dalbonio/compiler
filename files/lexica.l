@@ -36,6 +36,9 @@ OP_LOG and|or
 "do"		                { return TK_DO; }
 "end"		                { return TK_END; }
 "not"		                { return TK_NOT; }
+"switch"					{ return TK_SWITCH; }
+"case"					{ return TK_CASE; }
+"default"					{ return TK_DEFAULT; }
 
 "++"                        { return TK_INCR; }
 "--"                        { return TK_DECR; }

@@ -1,3 +1,11 @@
+<<<<<<< HEAD
 a = 1
 b = 1
 c = a + b
+=======
+a = 3
+switch (a) do
+	default:
+		b = 3
+end
+>>>>>>> 78a95774f26e449deda451872799298b32388f94
