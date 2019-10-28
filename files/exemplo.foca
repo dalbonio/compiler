@@ -1,8 +1,2 @@
-a = 3
-b = 2
-if( a eq 3 ) do
-    a = 5 + b
-    a = a + 2
-end
-
-a = a + 2
+a = "abc"
+b = input(string)

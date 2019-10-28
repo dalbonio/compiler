@@ -320,13 +320,13 @@ E 			: '(' E ')'
 				if($3.label == "string")
 				{
 					$$.tipo = STRING;
-					string label_tamanho;
 
-					umap_label_add($$.label, STRING);
-					umap_label_add(label_tamanho, INT);
+					umap_label_add($$.label, STRING, true);
+					string label_tamanho = temp_umap[$$.label].size_label;
 
-					$$.traducao = "\t" + string("cin >> buffer;\n");
-					$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
+					$$.traducao = string("\t") + string("cin >> buffer;\n");
+					$$.traducao += countStringProc();
+					$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
 					$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
 					$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 				}
@@ -341,13 +341,13 @@ E 			: '(' E ')'
 			{
 				$$.tipo = STRING;
 				$$.label = label_generator();
-				string label_tamanho = label_generator();
 
-				umap_label_add($$.label, STRING);
-				umap_label_add(label_tamanho, INT);
+				umap_label_add($$.label, STRING, true);
+				string label_tamanho = temp_umap[$$.label].size_label;
 
 				$$.traducao = "\t" + string("cin >> buffer;\n");
-				$$.traducao += "\t" + label_tamanho + " = strlen(buffer);\n";
+				$$.traducao += countStringProc();
+				$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
 				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 			}
@@ -426,10 +426,8 @@ E 			: '(' E ')'
 
 				replace_all(str, "\\n", ""); //feature para permitir string de varias linhas
 
-				string label_tamanho = label_generator();
-				umap_label_add($$.label, $$.tipo);
-				umap_label_add(label_tamanho, INT);
-
+				umap_label_add($$.label, $$.tipo, true);
+				string label_tamanho = temp_umap[$$.label].size_label;
 				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
 				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", \"" + str + "\");\n";
@@ -489,15 +487,18 @@ ATR 		: TK_ID '=' E
 				//no caso da variavel ja ter um tipo setado no codigo
 				$1.label = get_current_context_id_label($1.traducao);
 				cout << $1.label;
-				//cout << $1.traducao << $1.label << endl;
+
+				bool hasTamanho = false;
+				if($3.tipo == STRING) //add new types with size in if clause, as vectors, matrices
+				{
+					hasTamanho = true;
+				}
+
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
 					$$.tipo = $3.tipo;
-
 					//criar uma temporaria nova pra guardar o antigo valor
-					$$.label = add_variable_in_current_context($1.traducao, $$.tipo);
-					//umap_label_add($$.label, $$.tipo);
-					//var_umap[$1.traducao] = $$.label;
+					$$.label = add_variable_in_current_context($1.traducao, $$.tipo, hasTamanho);
 				}
 				else
 				{
@@ -620,7 +621,7 @@ CONT		: TK_ID TK_CONT E
 				$$.traducao += "\t" + $1.label + " = " + $1.label + " - " + new_label + ";\n";
 			};
 
-BL_END:		TK_END
+BL_END		: TK_END
 			{
 				endContext();
 				$$.traducao = "";
@@ -638,6 +639,7 @@ int main( int argc, char* argv[] )
 	yydebug = 1;
 	context_stack.push_back(unordered_map<string, string>());
 	initialize_tipo_umap();
+	initialize_proc_temp_umap();
 	initialize_matrix();
 	initialize_op_umap();
 	yyparse();

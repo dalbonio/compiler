@@ -17,6 +17,7 @@ struct variavel
 {
 	string user_label;
 	int tipo;
+	string size_label;
 };
 
 struct atributos

@@ -13,7 +13,7 @@ void initialize_tipo_umap();
 void set_error_matrix();
 void initialize_matrix();
 void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
-void umap_label_add(string& new_label, int new_tipo);
+void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op);
 void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
@@ -36,12 +36,25 @@ string declare_variables()
 {
 	string total = string("");
 
+	//comments to help in intermediate code read
 	for(int i = context_stack.size() - 1; i >= 0 ; i--)
 	{
 		for(auto it = context_stack[i].begin(); it != context_stack[i].end(); it++)
 		{
 			total += "\t//" + it->first + " = " + it->second + "\n";
 		}
+	}
+
+	total += "\n";
+
+	for(auto it = proc_temp_umap.begin(); it != proc_temp_umap.end(); it++)
+	{
+		if(it->second == 0)
+		{
+			it->second = INT;
+		}
+
+		total += "\t" + tipo_umap[it->second] + " " + it->first + ";\n";
 	}
 
 	total += "\n";
@@ -135,11 +148,20 @@ void replace_all(std::string & data, std::string toSearch, std::string replaceSt
 	}
 }
 
-void umap_label_add(string& new_label, int new_tipo)
+void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 {
 	new_label = label_generator();
 	variavel new_var;
 	new_var.tipo = new_tipo;
+	if(hasTamanho)
+	{
+		string size_label = label_generator();
+		variavel size_var;
+		size_var.tipo = INT;
+		temp_umap[size_label] = size_var;
+		new_var.size_label = size_label;
+	}
+
 	temp_umap[new_label] = new_var;
 }
 
@@ -203,11 +225,11 @@ void replace_op(string& op_type, string new_label, string first_label, string se
 	replace_all(op_type, "operator", op);
 }
 
-string add_variable_in_current_context(string var_name, int tipo)
+string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false)
 {
 	auto cur_umap = context_stack.back();
 	string new_label;
-	umap_label_add(new_label, tipo);
+	umap_label_add(new_label, tipo, hasTamanho);
 	cur_umap[var_name] = new_label;
 }
 
@@ -244,6 +266,11 @@ void initialize_op_umap()
 
 	op_umap_str["and"] = AND;
 	op_umap_str["or"] = OR;
+}
+
+void initialize_proc_temp_umap()
+{
+	proc_temp_umap["countTempLabel"] = INT;
 }
 
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
@@ -309,6 +336,17 @@ int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
 	return new_type;
 }
 
+string genCountStrLabelStart()
+{
+	return string("CountStrLabelStart") + to_string(strLabelCounter) + ":\n";
+}
+
+string genCountStrLabelEnd()
+{
+	string str = string("CountStrLabelEnd") + to_string(strLabelCounter) + ":\n";
+	return str;
+}
+
 void pushContext()
 {
 	context_stack.push_back(unordered_map<string, string>());
@@ -317,6 +355,24 @@ void pushContext()
 void endContext()
 {
 	context_stack.pop_back();
+}
+
+string countStringProc()
+{
+	string traducao = "\t//contandoStr\n";
+	string labelStart = genCountStrLabelStart();
+	string labelEnd = genCountStrLabelEnd();
+
+	traducao += "\tcountTempLabel = 0\n";
+	traducao += "\t" + labelStart;
+	traducao += "\texpTempLabel = buffer[countTempLabel] == \'\\0\';\n";
+	traducao += "\tif(expTempLabel) goto " + genCountStrLabelEnd() + "\n";
+	traducao += "\tcountTempLabel = countTempLabel + 1\n";
+	traducao += "\tgoto " + labelStart + "\n";
+	traducao += "\t" + labelEnd + "\n";
+
+	strLabelCounter += 1;
+	return traducao;
 }
 
 #endif
