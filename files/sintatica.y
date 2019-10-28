@@ -327,7 +327,7 @@ E 			: '(' E ')'
 					$$.traducao = string("\t") + string("cin >> buffer;\n");
 					$$.traducao += countStringProc();
 					$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
-					$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+					$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
 					$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 				}
 				else
@@ -348,7 +348,8 @@ E 			: '(' E ')'
 				$$.traducao = "\t" + string("cin >> buffer;\n");
 				$$.traducao += countStringProc();
 				$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
-				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+				//falta adicionar casting para o malloc
+				$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 			}
 			| TK_OP_ARIT E
@@ -374,11 +375,11 @@ E 			: '(' E ')'
 
 				$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
-
 				$$.traducao += implicit_conversion_op($$, $1, $2, $3, 0);
 
 				new_var.tipo = $$.tipo;
 				temp_umap[$$.label] = new_var;
+				//cout << $$.label;
 				//$$.resultado = $1.resultado + $3.resultado;
 			}
 			| COND
@@ -427,9 +428,10 @@ E 			: '(' E ')'
 				replace_all(str, "\\n", ""); //feature para permitir string de varias linhas
 
 				umap_label_add($$.label, $$.tipo, true);
+				//cout << "label: " << $$.label << endl;
 				string label_tamanho = temp_umap[$$.label].size_label;
 				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
-				$$.traducao += "\t" + $$.label + " = malloc("+ label_tamanho +");\n";
+				$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", \"" + str + "\");\n";
 			}
 			| TK_ID
@@ -486,12 +488,14 @@ ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
 				$1.label = get_current_context_id_label($1.traducao);
-				cout << $1.label;
+				//cout << $1.label;
 
 				bool hasTamanho = false;
+
 				if($3.tipo == STRING) //add new types with size in if clause, as vectors, matrices
 				{
 					hasTamanho = true;
+					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
 				}
 
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )

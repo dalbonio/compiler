@@ -14,7 +14,6 @@ void set_error_matrix();
 void initialize_matrix();
 void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
-void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op);
 void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 string loop_label_generator();
@@ -73,6 +72,7 @@ string declare_variables()
 
 	return total;
 }
+
 void initialize_tipo_umap()
 {
 	tipo_umap[INT] = "int";
@@ -100,23 +100,28 @@ void set_error_matrix()
 	}
 }
 
-void initialize_matrix()
+void set_int_double_matrix()
 {
-	set_error_matrix();
-
 	for(int i = ADD; i <= LESS; i++)
 	{
 		for(int j = INT; j <= DOUBLE; j++)
 		{
 			for(int k = INT; k <= DOUBLE; k++)
 			{
+				string command1;
+				string command2;
+
 				if(j < k)
 				{
-					matrix[i][j][k] = to_string(k) + "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n\tmain_label = new_label operator second_label;\n";
+					command1 = "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n";
+					command2 = "\tmain_label = new_label operator second_label;\n";
+					matrix[i][j][k] = to_string(k) + command1 + command2;
 				}
 				else if(j > k)
 				{
-					matrix[i][j][k] = to_string(j) + "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n\tmain_label = first_label operator new_label;\n";
+					command1 = "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n";
+					command2 = "\tmain_label = first_label operator new_label;\n";
+					matrix[i][j][k] = to_string(j) + command1 + command2;
 				}
 			}
 		}
@@ -126,11 +131,34 @@ void initialize_matrix()
 			matrix[i][j][j] = to_string(j) + "\tmain_label = first_label operator second_label;\n";
 		}
 	}
+}
 
+void set_boolean_matrix()
+{
 	for(int i = AND; i <= OR ; i++)
 	{
 		matrix[i][BOOLEAN][BOOLEAN] = to_string(BOOLEAN) + "\tmain_label = first_label operator second_label;\n";
 	}
+}
+
+void set_string_matrix()
+{
+	string command1 = "\tsize_final_str = size_first_str + size_second_str;\n";
+	string command2 = "\tsize_final_str = size_final_str - 1;\n";
+	string command3 = "\tnew_label = (char*) malloc(size_final_str);\n";
+	string command4 = "\tstrcpy(new_label, \"\");\n";
+	string command5 = "\tstrcat(new_label, first_label);\n";
+	string command6 = "\tstrcat(new_label, second_label);\n";
+	string command7 = "\tmain_label = new_label;\n";
+	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
+}
+
+void initialize_matrix()
+{
+	set_error_matrix();
+	set_int_double_matrix();
+	set_boolean_matrix();
+	set_string_matrix();
 }
 
 void replace_all(std::string & data, std::string toSearch, std::string replaceStr)
@@ -153,16 +181,21 @@ void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 	new_label = label_generator();
 	variavel new_var;
 	new_var.tipo = new_tipo;
+
 	if(hasTamanho)
 	{
 		string size_label = label_generator();
+		//cout << "size: " << size_label << endl;
 		variavel size_var;
 		size_var.tipo = INT;
 		temp_umap[size_label] = size_var;
+
 		new_var.size_label = size_label;
+		//cout << "size_label: " << size_label << " " << new_var.size_label << endl;
 	}
 
 	temp_umap[new_label] = new_var;
+	//cout << "label: " << new_label << " size_label: " << temp_umap[new_label].size_label << endl;
 }
 
 string search_variable(string var_name)
@@ -215,21 +248,12 @@ string get_id_label(string user_label)
 	return label;
 }
 
-
-void replace_op(string& op_type, string new_label, string first_label, string second_label, string main_label, string op)
-{
-	replace_all(op_type, "new_label", new_label);
-	replace_all(op_type, "first_label", first_label);
-	replace_all(op_type, "second_label", second_label);
-	replace_all(op_type, "main_label", main_label);
-	replace_all(op_type, "operator", op);
-}
-
 string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false)
 {
 	auto cur_umap = context_stack.back();
 	string new_label;
 	umap_label_add(new_label, tipo, hasTamanho);
+	//cout << "con_label: " << new_label << " con_size_label: " << temp_umap[new_label].size_label << endl;
 	cur_umap[var_name] = new_label;
 }
 
@@ -280,6 +304,7 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	int new_type;
 	string new_label;
 	string op_translate;
+	bool hasTamanho = false;
 
 	op = op_umap_str[atr_2.traducao];
 	op_translate = matrix[op][atr_1.tipo][atr_3.tipo];
@@ -293,9 +318,15 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 		yyerror("Operação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
 	}
 
-	if(atr_1.tipo != atr_3.tipo)
+	if(atr_1.tipo == STRING || atr_3.tipo == STRING)
 	{
-		umap_label_add(new_label, new_type);
+		hasTamanho = true;
+		umap_label_add(new_label, new_type, hasTamanho);
+	}
+
+	if((atr_1.tipo != atr_3.tipo) && hasTamanho == false)
+	{
+		umap_label_add(new_label, new_type, hasTamanho);
 	}
 
 	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
@@ -304,11 +335,26 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	}
 
 	op_translate.replace(0, 1, "");
-	//cout << op_translate << endl;
-	replace_op(op_translate, new_label, atr_1.label, atr_3.label, atr_main.label, op_umap[op]);
-	//cout << op_translate << endl;
-	//cout << new_label << endl << atr_1.label << endl << atr_3.label << endl << atr_main.label << endl << op_umap[op] << endl;
+	//cout << "\n--AA: " << temp_umap[new_label].tipo << endl;
+	//cout << "\n--BB: " << temp_umap[atr_1.label].tipo << endl;
+	//cout << "op_label: " << new_label << " op_size_label: " << temp_umap[new_label].size_label << endl;
+	//cout << "op_label: " << atr_1.label << " op_size_label: " << temp_umap[atr_1.label].size_label << endl;
+	//cout << "op_label: " << atr_3.label << " op_size_label: " << temp_umap[atr_3.label].size_label << endl;
+	if(hasTamanho == true)
+	{
+		replace_all(op_translate, "size_final_str", temp_umap[new_label].size_label);
+		replace_all(op_translate, "size_first_str", temp_umap[atr_1.label].size_label);
+		replace_all(op_translate, "size_second_str", temp_umap[atr_3.label].size_label);
+	}
 
+	//cout << "main: " << atr_main.label << endl;
+
+	replace_all(op_translate, "new_label", new_label);
+	replace_all(op_translate, "first_label", atr_1.label);
+	replace_all(op_translate, "second_label", atr_3.label);
+	replace_all(op_translate, "main_label", atr_main.label);
+	replace_all(op_translate, "operator", op_umap[op]);
+	
 	return op_translate;
 }
 
