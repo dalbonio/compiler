@@ -19,6 +19,8 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 string loop_label_generator();
 string loop_label_end_generator();
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
+string string_to_double(string str_label, string double_label);
+string string_to_int(string str_label, string int_label);
 
 void yyerror( string MSG )
 {
@@ -82,7 +84,7 @@ void initialize_tipo_umap()
 
 	tipo_umap_str["int"] = INT;
 	tipo_umap_str["string"] = STRING;
-	tipo_umap_str["int"] = BOOLEAN;
+	tipo_umap_str["boolean"] = BOOLEAN;
 	tipo_umap_str["double"] = DOUBLE;
 }
 
@@ -419,6 +421,16 @@ string countStringProc()
 
 	strLabelCounter += 1;
 	return traducao;
+}
+
+string string_to_double(string str_label, string double_label)
+{
+	return string("\tsscanf(") + str_label + string(", \"%lf\", &") + double_label + string(");\n"); 
+}
+
+string string_to_int(string str_label, string int_label)
+{
+	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n"); 
 }
 
 #endif

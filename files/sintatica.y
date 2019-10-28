@@ -296,19 +296,39 @@ E 			: '(' E ')'
 			}
 			| '(' TK_CASTING ')' E
 			{
-				if( $2.label != "int" && $2.label != "double")
+				/*if( $2.label != "int" && $2.label != "double")
 				{
 					yyerror("erro na conversao");
-				}
-
-				if( $2.label == "boolean" && $4.tipo != BOOLEAN )
-				{
-					yyerror("n tem como converter pra boolean");
-				}
-
+				}*/
 				$$.tipo = tipo_umap_str[$2.label];
 				umap_label_add($$.label, $$.tipo);
-				$$.traducao = $4.traducao + "\t" + $$.label + " = " + "(" + $2.label + ") " + $4.label + ";\n";
+				$$.traducao = $4.traducao;
+
+				if($$.tipo == BOOLEAN)
+				{
+					yyerror("Não existe conversão para boolean");
+				}
+
+				if($$.tipo == $4.tipo)
+				{
+					yyerror(string("Não pode converter a variável para o tipo \"") + $2.label + string("\", pois ela já é desse tipo"));
+				}
+
+				if($4.tipo == STRING)
+				{
+					if($$.tipo == DOUBLE)
+					{
+						$$.traducao += string_to_double($4.label, $$.label);
+					}
+					else if($$.tipo == INT)
+					{
+						$$.traducao += string_to_int($4.label, $$.label);
+					}
+				}
+				else
+				{
+					$$.traducao += "\t" + $$.label + " = " + "(" + $2.label + ") " + $4.label + ";\n";
+				}
 			}
 			| TK_INPUT '(' TK_CASTING ')'
 			{
