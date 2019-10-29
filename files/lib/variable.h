@@ -2,7 +2,8 @@
 #define VARIABLE_H
 
 //maps all user variables to temporary variables
-unordered_map<string, string> var_umap;
+//unordered_map<string, string> var_umap;
+
 //maps all temporary variables names to their "variable" struct
 unordered_map<string, variavel> temp_umap;
 //maps tipo integer to their respective string in intermediate code
@@ -27,7 +28,8 @@ string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 
 int tokenContador = 0;
 int contadorLinha = 1;
-int loopContador = 0;
+int cmdLabelContador = 0;
 int strLabelCounter = 0;
+int caseSwitchCounter = 0;
 
 #endif

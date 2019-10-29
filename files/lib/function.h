@@ -16,8 +16,8 @@ void replace_all(std::string& data, std::string toSearch, std::string replaceStr
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
-string loop_label_generator();
-string loop_label_end_generator();
+string cmd_label_generator();
+string cmd_label_end_generator();
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
 string string_to_double(string str_label, string double_label);
 string string_to_int(string str_label, string int_label);
@@ -209,6 +209,7 @@ string search_variable(string var_name)
 		if(lbl_umap.find(var_name) != lbl_umap.end() )
 			return lbl_umap[var_name];
 	}
+	
 	return "0";
 }
 
@@ -235,6 +236,7 @@ string get_id_label(string user_label)
 {
 	auto& lbl_umap = context_stack.back();
 	string label = search_variable(user_label);
+
 	if(label == "0")
 	{
 		string new_label = label_generator();
@@ -360,14 +362,14 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	return op_translate;
 }
 
-string loop_label_generator()
+string cmd_label_generator()
 {
-	return string("LOOP_") + to_string(loopContador);
+	return string("CMD_") + to_string(cmdLabelContador);
 }
 
-string loop_label_end_generator()
+string cmd_label_end_generator()
 {
-	return string("LOOP_END_") + to_string(loopContador++);
+	return string("CMD_END_") + to_string(cmdLabelContador);
 }
 
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)

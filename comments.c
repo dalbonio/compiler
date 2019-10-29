@@ -1,4 +1,62 @@
 /*
+			| TK_ID TK_INCR
+			{
+				string new_label;
+				string value;
+
+				switch(temp_umap[var_umap[$1.traducao]].tipo)
+				{
+					case INT:
+					{
+						value = "1";
+					}
+					break;
+
+					case DOUBLE:
+					{
+						value = "1.0";
+					}
+					break;
+				}
+
+				umap_label_add(new_label, $1.tipo);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				//$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label;
+				$$.traducao = "\t" + new_label + " = " + value + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " + " + new_label + ";\n";
+			}
+			| TK_ID TK_DECR
+			{
+				string new_label;
+				string value;
+
+				switch(temp_umap[var_umap[$1.traducao]].tipo)
+				{
+					case INT:
+					{
+						value = "1";
+					}
+					break;
+
+					case DOUBLE:
+					{
+						value = "1.0";
+					}
+					break;
+				}
+
+				umap_label_add(new_label, $1.tipo);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				//$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label;
+				$$.traducao = "\t" + new_label + " = " + value + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " - " + new_label + ";\n";
+			}*/
+
+/*
 a = 1 + 1
 b = 2.0 - 2
 c = 3 * 3.0

@@ -1,2 +1,7 @@
 a = 1
-b = (double) a
+
+switch(a) do
+    case 3, 4, 5:
+        b = 3
+    default:
+end
