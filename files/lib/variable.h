@@ -30,6 +30,5 @@ int tokenContador = 0;
 int contadorLinha = 1;
 int cmdLabelContador = 0;
 int strLabelCounter = 0;
-int caseSwitchCounter = 0;
 
 #endif

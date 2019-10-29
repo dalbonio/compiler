@@ -94,55 +94,43 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 
 REC_NUM:	TK_NUM ',' REC_NUM
 			{
-				caseSwitchCounter++;
-				cout << "case: " << caseSwitchCounter << endl;
-
-				/*string cmd_label = cmd_label_generator();
-				$$.traducao += "\tif(" + $$.label + ")\n";
-				$$.traducao += "\tgoto " + cmd_label + ";\n";*/
+				string case_label;
 				string new_label;
+
 				umap_label_add($1.label, $1.tipo);
+				umap_label_add(case_label, BOOLEAN);
 				umap_label_add(new_label, BOOLEAN);
+
 				$$.traducao = "\t" + $1.label + " = " + $1.traducao + ";\n";
-				$$.traducao += "\t" + new_label + " = " + "VAR_LABEL == " + $1.label + ";\n/**/\n";
+				$$.traducao += "\t" + case_label + " = " + "VAR_LABEL == " + $1.label + ";\n";
 				$$.traducao += $3.traducao;
-				//$$.label += new_label + $3.label;
-				//cout << $$.label << endl;
-				//$$.traducao += $$.label + " ";
+				$$.traducao += "\t" + new_label + " = " + case_label + " || " + $3.label + ";\n";	
+				
+				$$.label = new_label;
 			}
 			| TK_NUM ':'
 			{
-				//string cmd_label = cmd_label_generator();
-				//cmdLabelContador++;
-				//caseSwitchCounter++;
-				//string cmd_label = cmd_label_generator();
-				//cmdLabelContador--;
-				//cout << $$.label + "AQUI" << endl;
-				string new_label;
+				string case_label;
+
 				umap_label_add($1.label, $1.tipo);
-				umap_label_add(new_label, BOOLEAN);
+				umap_label_add(case_label, BOOLEAN);
+
 				$$.traducao = "\t" + $1.label + " = " + $1.traducao + ";\n";
-				$$.traducao += "\t" + new_label + " = " + "VAR_LABEL == " + $1.label + ";\n";
-				$$.traducao += "\tif(" + new_label + ")\n\t{\n";
-				//$$.traducao += "\tgoto " + cmd_label + ";\n/**/\n";
+				$$.traducao += "\t" + case_label + " = " + "VAR_LABEL == " + $1.label + ";\n";
+
+				$$.label = case_label;
 			};
 
 
 BL_CASE:    TK_CASE REC_NUM COMANDOS BL_CASE
 			{
-				//caseSwitchCounter--;
-				//cmdLabelContador -= caseSwitchCounter;
-				//string cmd_label[2] = {cmd_label_generator(), cmd_label_end_generator()};
-
 				$$.traducao = $2.traducao;
-				//$$.traducao += "\t" + cmd_label[0] + ":\n";
-				$$.traducao += $3.traducao + "\t}\n/**/\n";
-				//$$.traducao += "\t" + cmd_label[1] + ":\n/**/\n";
+				$$.traducao += "\tif(" + $2.label + ")\n\t{\n";
+				$$.traducao += $3.traducao + "\t}\n";
 				$$.traducao += $4.traducao;
 			}
 			| BL_DEFAULT
 			{
-				//caseSwitchCounter = 0;
 				$$.traducao = $1.traducao;
 			};
 
@@ -152,7 +140,7 @@ BL_DEFAULT: TK_DEFAULT ':' COMANDOS BL_END
 				$$.traducao =  "\telse\n";
 				$$.traducao += "\t{\n";
 				$$.traducao += $3.traducao;
-				$$.traducao += "\t}\n/**/\n";
+				$$.traducao += "\t}\n";
 			};
 
 
