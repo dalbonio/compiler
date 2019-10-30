@@ -104,8 +104,8 @@ REC_NUM:	TK_NUM ',' REC_NUM
 				$$.traducao = "\t" + $1.label + " = " + $1.traducao + ";\n";
 				$$.traducao += "\t" + case_label + " = " + "VAR_LABEL == " + $1.label + ";\n";
 				$$.traducao += $3.traducao;
-				$$.traducao += "\t" + new_label + " = " + case_label + " || " + $3.label + ";\n";	
-				
+				$$.traducao += "\t" + new_label + " = " + case_label + " || " + $3.label + ";\n";
+
 				$$.label = new_label;
 			}
 			| TK_NUM ':'
@@ -461,11 +461,12 @@ E 			: '(' E ')'
 				{
 					$$.label = label_generator();
 					$$.tipo = INT;
+					cout << "aeho" << $2.tipo << $2.label << $2.traducao << "aeho" << endl;
 					variavel new_var;
 					new_var.tipo = $$.tipo;
 					temp_umap[$$.label] = new_var;
 					$$.traducao = $2.traducao;
-					$$.traducao += string("\t") + temp_umap[$2.label].size_label + ";\n";
+					$$.traducao += string("\t") + $$.label + " = " + temp_umap[$2.label].size_label + ";\n";
 				}
 				else
 				{
