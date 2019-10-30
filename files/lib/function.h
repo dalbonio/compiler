@@ -209,7 +209,7 @@ string search_variable(string var_name)
 		if(lbl_umap.find(var_name) != lbl_umap.end() )
 			return lbl_umap[var_name];
 	}
-	
+
 	return "0";
 }
 
@@ -299,6 +299,9 @@ void initialize_op_umap()
 void initialize_proc_temp_umap()
 {
 	proc_temp_umap["countTempLabel"] = INT;
+	proc_temp_umap["boundaryCheckTemp"] = INT;
+	proc_temp_umap["posTemp"] = INT;
+
 
 	has_length.insert(pair<int, bool>(STRING, true));
 }
@@ -360,7 +363,7 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	replace_all(op_translate, "second_label", atr_3.label);
 	replace_all(op_translate, "main_label", atr_main.label);
 	replace_all(op_translate, "operator", op_umap[op]);
-	
+
 	return op_translate;
 }
 
@@ -429,12 +432,12 @@ string countStringProc()
 
 string string_to_double(string str_label, string double_label)
 {
-	return string("\tsscanf(") + str_label + string(", \"%lf\", &") + double_label + string(");\n"); 
+	return string("\tsscanf(") + str_label + string(", \"%lf\", &") + double_label + string(");\n");
 }
 
 string string_to_int(string str_label, string int_label)
 {
-	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n"); 
+	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
 }
 
 #endif

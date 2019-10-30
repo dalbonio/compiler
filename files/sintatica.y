@@ -37,6 +37,7 @@ S 			: BP //bloco principal
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
 				cout <<	"\nint main(void)\n{\n";
 				cout << "\tchar* buffer;\n";
+				cout << "\tchar* error msg = malloc(sizeof(char) * 800)";
 				cout << declare_variables();
 				cout << $1.traducao << "\n\treturn 0;\n}" << endl;
 			}
@@ -400,7 +401,7 @@ E 			: '(' E ')'
 					$$.traducao = string("\t") + string("cin >> buffer;\n");
 					$$.traducao += countStringProc();
 					$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
-					$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
+					$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * "+ label_tamanho +");\n";
 					$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 				}
 				else
@@ -422,7 +423,7 @@ E 			: '(' E ')'
 				$$.traducao += countStringProc();
 				$$.traducao += "\t" + label_tamanho + " = countTempLabel;\n";
 				//falta adicionar casting para o malloc
-				$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
+				$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * "+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 			}
 			| TK_OP_ARIT E
@@ -461,12 +462,45 @@ E 			: '(' E ')'
 				{
 					$$.label = label_generator();
 					$$.tipo = INT;
-					cout << "aeho" << $2.tipo << $2.label << $2.traducao << "aeho" << endl;
 					variavel new_var;
 					new_var.tipo = $$.tipo;
 					temp_umap[$$.label] = new_var;
 					$$.traducao = $2.traducao;
 					$$.traducao += string("\t") + $$.label + " = " + temp_umap[$2.label].size_label + ";\n";
+				}
+				else
+				{
+					yyerror("expression has no length attribute");
+				}
+			}
+			| E '[' E ']'
+			{
+				if($3.tipo != INT )
+				{
+					yyerror("expression doesnt evaluate to integer");
+				}
+
+				if(has_length.find($1.tipo) != has_length.end())
+				{
+					$$.label = label_generator();
+
+					$$.traducao = $1.traducao + $3.traducao;
+					$$.traducao += "\tif(" + $3.label + "== 0){ strcpy(errorMsg, \"0 is invalid index\"); goto Error;}\n";
+					$$.traducao += "\telse if(" + $3.label + " < 0 ) tempPos = " + temp_umap[$1.label].size_label + " + " + $3.label + ";\n";
+					$$.traducao += "\telse tempPos = " + $3.label + " - 1;\n";
+					$$.traducao += "\tif(posTemp < 0 || posTemp >= " + temp_umap[$1.label].size_label + "){ strcpy(errorMsg, \"out of bounds\"); goto Error;}\n";
+					//new $$ type is array $1 associated type.
+					//Ex: if $1 is int array, $$ type is int
+					if($1.tipo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
+					{
+						$$.tipo = STRING;
+						umap_label_add($$.label, $$.tipo, true);
+						string label_tamanho = temp_umap[$$.label].size_label;
+
+						$$.traducao += "\t" + label_tamanho + " = 1;\n";
+						$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
+						$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[" + $3.label + "];" + $3.label + "[1] = \'\\0\';\n";
+					}
 				}
 				else
 				{
@@ -522,7 +556,7 @@ E 			: '(' E ')'
 				//cout << "label: " << $$.label << endl;
 				string label_tamanho = temp_umap[$$.label].size_label;
 				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
-				$$.traducao += "\t" + $$.label + " = (char*) malloc("+ label_tamanho +");\n";
+				$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * "+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", \"" + str + "\");\n";
 			}
 			| TK_ID
