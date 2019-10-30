@@ -1,2 +1,9 @@
-a = "abc"
-b = input(string)
+a = 1
+
+switch(a) do
+    case 3, 4, 5:
+        b = 9
+    case 6:
+        c = 8
+    default:
+end

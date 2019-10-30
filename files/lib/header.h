@@ -15,8 +15,8 @@ using namespace std;
 
 struct variavel
 {
-	string user_label;
 	int tipo;
+	string user_label;
 	string size_label;
 };
 
