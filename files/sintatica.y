@@ -36,7 +36,7 @@ S 			: BP //bloco principal
 				cout << "\n/*Compilador FOCA*/\n";
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
 				cout <<	"\nint main(void)\n{\n";
-				cout << "\tchar buffer[700];\n";
+				cout << "\tchar* buffer;\n";
 				cout << declare_variables();
 				cout << $1.traducao << "\n\treturn 0;\n}" << endl;
 			}
@@ -380,6 +380,23 @@ E 			: '(' E ')'
 				new_var.tipo = $$.tipo;
 				temp_umap[$$.label] = new_var;
 				//$$.resultado = $1.resultado + $3.resultado;
+			}
+			| '#' E
+			{
+				if(has_length.find($2.tipo) != has_length.end() )
+				{
+					$$.label = label_generator();
+					$$.tipo = INT;
+					variavel new_var;
+					new_var.tipo = $$.tipo;
+					temp_umap[$$.label] = new_var;
+					$$.traducao = $2.traducao;
+					$$.traducao += string("\t") + temp_umap[$2.label].size_label + ";\n";
+				}
+				else
+				{
+					yyerror("expression has no length attribute");
+				}
 			}
 			| COND
 			{

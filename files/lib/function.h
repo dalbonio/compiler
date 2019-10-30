@@ -271,6 +271,8 @@ void initialize_op_umap()
 void initialize_proc_temp_umap()
 {
 	proc_temp_umap["countTempLabel"] = INT;
+
+	has_length.insert(pair<int, bool>(STRING, true));
 }
 
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
