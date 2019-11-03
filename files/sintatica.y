@@ -111,7 +111,6 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 				$$.traducao = "\n";
 			};
 
-
 REC_NUM:	TK_NUM ',' REC_NUM
 			{
 				string case_label;
@@ -545,6 +544,22 @@ E 			: '(' E ')'
 					yyerror("E -> E '[' E ']'\nexpression has no length attribute");
 				}
 			}
+			| '(' E ')' '?' E ':' E//ternário
+			{
+				if($2.tipo != BOOLEAN)
+				{
+					yyerror("E -> E '?' E ':' E//ternário\nfirst expression is not a boolean");
+				}
+
+				$$.traducao = $2.traducao;
+				$$.traducao += "\n/**/\n\tif(" + $2.label + ") " + "goto " + cmd_label_generator("IF") + ";\n";
+				$$.traducao += $7.traducao;
+				$$.traducao += "\tgoto " + cmd_label_end_generator("IF") + ";\n";
+				$$.traducao += "\n/**/\n\t" + cmd_label_generator("IF") + ":\n";
+				$$.traducao += $5.traducao;
+				$$.traducao += "\t" + cmd_label_end_generator("IF") + ":\n";
+				ifLabelContador++;
+			}
 			| COND
 			{
 				$$.tipo = $1.tipo;
@@ -688,6 +703,7 @@ COND 		: E TK_OP_REL E
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $1.traducao + $3.traducao;
 				$$.traducao += types_operations($$, $1, $2, $3, BOOLEAN);
+				cout << $$.traducao;
 				//$$.resultado = 0;
 
 			}

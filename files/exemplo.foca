@@ -1,6 +1,2 @@
-a = "baba"
-b = "baba"
-
-if(a neq b) do
-    print(5)
-end
+a = 2
+(a >= 2) ? c = 65 : b = 9
