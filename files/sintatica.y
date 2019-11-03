@@ -487,7 +487,7 @@ E 			: '(' E ')'
 
 				$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += implicit_conversion_op($$, $1, $2, $3, 0);
+				$$.traducao += types_operations($$, $1, $2, $3, 0);
 
 				new_var.tipo = $$.tipo;
 				temp_umap[$$.label] = new_var;
@@ -687,7 +687,7 @@ COND 		: E TK_OP_REL E
 				$$.tipo = BOOLEAN;
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				$$.traducao += types_operations($$, $1, $2, $3, BOOLEAN);
 				//$$.resultado = 0;
 
 			}
@@ -696,7 +696,7 @@ COND 		: E TK_OP_REL E
 				$$.tipo = BOOLEAN;
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += implicit_conversion_op($$, $1, $2, $3, BOOLEAN);
+				$$.traducao += types_operations($$, $1, $2, $3, BOOLEAN);
 				//$$.resultado = 0;
 			}
 			| TK_NOT E

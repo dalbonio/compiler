@@ -8,23 +8,32 @@
 void yyerror(string);
 string label_generator();
 string declare_variables();
-string get_id_label(string user_label);
 void initialize_tipo_umap();
-void set_error_matrix();
-void initialize_matrix();
-void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
-void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void initialize_op_umap();
-string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
+void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
+
+void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
+string search_variable(string var_name);
+string get_current_context_id_label(string user_label);
+string get_id_label(string user_label);
+string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false);
+void initialize_proc_temp_umap();
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
+string genCountStrLabelStart();
+string genCountStrLabelEnd();
+void pushContext();
+void endContext();
+string countStringProc();
+string outOfBoundsError();
+void set_error_matrix();
+void set_int_double_matrix();
+void initialize_matrix();
 string string_to_double(string str_label, string double_label);
 string string_to_int(string str_label, string int_label);
 
-//string if_label_generator();
-//string if_label_end_generator();
-
 string cmd_label_generator(string cmd_name = "CMD");
 string cmd_label_end_generator(string cmd_name = "CMD");
+string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 
 void yyerror( string MSG )
 {
@@ -92,79 +101,39 @@ void initialize_tipo_umap()
 	tipo_umap_str["double"] = DOUBLE;
 }
 
-void set_error_matrix()
+void initialize_op_umap()
 {
-	for(int i = 0; i < QTD_OPERATORS + 1; i++)
-	{
-		for(int j = 0; j < QTD_TYPES + 1; j++)
-		{
-			for(int k = 0; k < QTD_TYPES + 1; k++)
-			{
-				matrix[i][j][k] = ERROR_VALUE;
-			}
-		}
-	}
-}
+	op_umap[ADD] = "+";
+	op_umap[SUB] = "-";
+	op_umap[MULT] = "*";
+	op_umap[DIV] = "/";
 
-void set_int_double_matrix()
-{
-	for(int i = ADD; i <= LESS; i++)
-	{
-		for(int j = INT; j <= DOUBLE; j++)
-		{
-			for(int k = INT; k <= DOUBLE; k++)
-			{
-				string command1;
-				string command2;
+	op_umap[GEQ] = ">=";
+	op_umap[LEQ] = "<=";
+	op_umap[LESS] = "<";
+	op_umap[GREATER] = ">";
 
-				if(j < k)
-				{
-					command1 = "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n";
-					command2 = "\tmain_label = new_label operator second_label;\n";
-					matrix[i][j][k] = to_string(k) + command1 + command2;
-				}
-				else if(j > k)
-				{
-					command1 = "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n";
-					command2 = "\tmain_label = first_label operator new_label;\n";
-					matrix[i][j][k] = to_string(j) + command1 + command2;
-				}
-			}
-		}
+	op_umap[EQ] = "==";
+	op_umap[NEQ] = "!=";
 
-		for(int j = INT; j <= DOUBLE; j++)
-		{
-			matrix[i][j][j] = to_string(j) + "\tmain_label = first_label operator second_label;\n";
-		}
-	}
-}
+	op_umap[AND] = "&&";
+	op_umap[OR] = "||";
 
-void set_boolean_matrix()
-{
-	for(int i = AND; i <= OR ; i++)
-	{
-		matrix[i][BOOLEAN][BOOLEAN] = to_string(BOOLEAN) + "\tmain_label = first_label operator second_label;\n";
-	}
-}
+    op_umap_str["+"] = ADD;
+	op_umap_str["-"] = SUB;
+	op_umap_str["*"] = MULT;
+	op_umap_str["/"] = DIV;
 
-void set_string_matrix()
-{
-	string command1 = "\tsize_final_str = size_first_str + size_second_str;\n";
-	string command2 = "\tsize_final_str = size_final_str - 1;\n";
-	string command3 = "\tnew_label = (char*) malloc(size_final_str);\n";
-	string command4 = "\tstrcpy(new_label, \"\");\n";
-	string command5 = "\tstrcat(new_label, first_label);\n";
-	string command6 = "\tstrcat(new_label, second_label);\n";
-	string command7 = "\tmain_label = new_label;\n";
-	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
-}
+	op_umap_str[">="] = GEQ;
+	op_umap_str["<="] = LEQ;
+	op_umap_str["<"] = LESS;
+	op_umap_str[">"] = GREATER;
 
-void initialize_matrix()
-{
-	set_error_matrix();
-	set_int_double_matrix();
-	set_boolean_matrix();
-	set_string_matrix();
+	op_umap_str["eq"] = EQ;
+	op_umap_str["neq"] = NEQ;
+
+	op_umap_str["and"] = AND;
+	op_umap_str["or"] = OR;
 }
 
 void replace_all(std::string & data, std::string toSearch, std::string replaceStr)
@@ -265,41 +234,6 @@ string add_variable_in_current_context(string var_name, int tipo, bool hasTamanh
 	cur_umap[var_name] = new_label;
 }
 
-void initialize_op_umap()
-{
-	op_umap[ADD] = "+";
-	op_umap[SUB] = "-";
-	op_umap[MULT] = "*";
-	op_umap[DIV] = "/";
-
-	op_umap[GEQ] = ">=";
-	op_umap[LEQ] = "<=";
-	op_umap[LESS] = "<";
-	op_umap[GREATER] = ">";
-
-	op_umap[EQ] = "==";
-	op_umap[NEQ] = "!=";
-
-	op_umap[AND] = "&&";
-	op_umap[OR] = "||";
-
-    op_umap_str["+"] = ADD;
-	op_umap_str["-"] = SUB;
-	op_umap_str["*"] = MULT;
-	op_umap_str["/"] = DIV;
-
-	op_umap_str[">="] = GEQ;
-	op_umap_str["<="] = LEQ;
-	op_umap_str["<"] = LESS;
-	op_umap_str[">"] = GREATER;
-
-	op_umap_str["eq"] = EQ;
-	op_umap_str["neq"] = NEQ;
-
-	op_umap_str["and"] = AND;
-	op_umap_str["or"] = OR;
-}
-
 void initialize_proc_temp_umap()
 {
 	proc_temp_umap["countTempLabel"] = INT;
@@ -308,67 +242,6 @@ void initialize_proc_temp_umap()
 
 
 	has_length.insert(pair<int, bool>(STRING, true));
-}
-
-string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
-{
-	//final_type == 0 serve para o tipo de $$ ser igual ao tipo das conversões, em operações aritméticas
-	int op;
-	int new_type;
-	string new_label;
-	string op_translate;
-	bool hasTamanho = false;
-
-	op = op_umap_str[atr_2.traducao];
-	op_translate = matrix[op][atr_1.tipo][atr_3.tipo];
-	new_type = op_translate[0] - '0';
-
-	if(op_translate == ERROR_VALUE)
-	{
-		string tipo_1 = atr_1.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_1.tipo];
-		string tipo_2 = atr_3.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_3.tipo];
-
-		yyerror("implicit_conversion_op()\nOperação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
-	}
-
-	if(atr_1.tipo == STRING || atr_3.tipo == STRING)
-	{
-		hasTamanho = true;
-		umap_label_add(new_label, new_type, hasTamanho);
-	}
-
-	if((atr_1.tipo != atr_3.tipo) && hasTamanho == false)
-	{
-		umap_label_add(new_label, new_type, hasTamanho);
-	}
-
-	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
-	{
-		atr_main.tipo = new_type;
-	}
-
-	op_translate.replace(0, 1, "");
-	//cout << "\n--AA: " << temp_umap[new_label].tipo << endl;
-	//cout << "\n--BB: " << temp_umap[atr_1.label].tipo << endl;
-	//cout << "op_label: " << new_label << " op_size_label: " << temp_umap[new_label].size_label << endl;
-	//cout << "op_label: " << atr_1.label << " op_size_label: " << temp_umap[atr_1.label].size_label << endl;
-	//cout << "op_label: " << atr_3.label << " op_size_label: " << temp_umap[atr_3.label].size_label << endl;
-	if(hasTamanho == true)
-	{
-		replace_all(op_translate, "size_final_str", temp_umap[new_label].size_label);
-		replace_all(op_translate, "size_first_str", temp_umap[atr_1.label].size_label);
-		replace_all(op_translate, "size_second_str", temp_umap[atr_3.label].size_label);
-	}
-
-	//cout << "main: " << atr_main.label << endl;
-
-	replace_all(op_translate, "new_label", new_label);
-	replace_all(op_translate, "first_label", atr_1.label);
-	replace_all(op_translate, "second_label", atr_3.label);
-	replace_all(op_translate, "main_label", atr_main.label);
-	replace_all(op_translate, "operator", op_umap[op]);
-
-	return op_translate;
 }
 
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
@@ -432,6 +305,81 @@ string outOfBoundsError()
 	return traducao;
 }
 
+void set_error_matrix()
+{
+	for(int i = 0; i < QTD_OPERATORS + 1; i++)
+	{
+		for(int j = 0; j < QTD_TYPES + 1; j++)
+		{
+			for(int k = 0; k < QTD_TYPES + 1; k++)
+			{
+				matrix[i][j][k] = ERROR_VALUE;
+			}
+		}
+	}
+}
+
+void set_int_double_matrix()
+{
+	for(int i = ADD; i <= LESS; i++)
+	{
+		for(int j = INT; j <= DOUBLE; j++)
+		{
+			for(int k = INT; k <= DOUBLE; k++)
+			{
+				string command1;
+				string command2;
+
+				if(j < k)
+				{
+					command1 = "\tnew_label = ("+ tipo_umap[k] + ") first_label;\n";
+					command2 = "\tmain_label = new_label operator second_label;\n";
+					matrix[i][j][k] = to_string(k) + command1 + command2;
+				}
+				else if(j > k)
+				{
+					command1 = "\tnew_label = ("+ tipo_umap[j] + ") second_label;\n";
+					command2 = "\tmain_label = first_label operator new_label;\n";
+					matrix[i][j][k] = to_string(j) + command1 + command2;
+				}
+			}
+		}
+
+		for(int j = INT; j <= DOUBLE; j++)
+		{
+			matrix[i][j][j] = to_string(j) + "\tmain_label = first_label operator second_label;\n";
+		}
+	}
+}
+
+void set_boolean_matrix()
+{
+	for(int i = AND; i <= OR ; i++)
+	{
+		matrix[i][BOOLEAN][BOOLEAN] = to_string(BOOLEAN) + "\tmain_label = first_label operator second_label;\n";
+	}
+}
+
+void set_string_matrix()
+{
+	string command1 = "\tsize_final_str = size_first_str + size_second_str;\n";
+	string command2 = "\tsize_final_str = size_final_str - 1;\n";
+	string command3 = "\tnew_label = (char*) malloc(size_final_str);\n";
+	string command4 = "\tstrcpy(new_label, \"\");\n";
+	string command5 = "\tstrcat(new_label, first_label);\n";
+	string command6 = "\tstrcat(new_label, second_label);\n";
+	string command7 = "\tmain_label = new_label;\n";
+	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
+}
+
+void initialize_matrix()
+{
+	set_error_matrix();
+	set_int_double_matrix();
+	set_boolean_matrix();
+	set_string_matrix();
+}
+
 string string_to_double(string str_label, string double_label)
 {
 	return string("\tsscanf(") + str_label + string(", \"%lf\", &") + double_label + string(");\n");
@@ -441,16 +389,6 @@ string string_to_int(string str_label, string int_label)
 {
 	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
 }
-
-/*string if_label_generator()
-{
-	return string("IF_") + to_string(ifLabelContador);
-}
-
-string if_label_end_generator()
-{
-	return string("IF_END_") + to_string(ifLabelContador);
-}*/
 
 string cmd_label_generator(string cmd_name)
 {
@@ -490,6 +428,67 @@ string cmd_label_end_generator(string cmd_name)
 	}
 
 	return label_end_name;
+}
+
+string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
+{
+	//final_type == 0 serve para o tipo de $$ ser igual ao tipo das conversões, em operações aritméticas
+	int op;
+	int new_type;
+	string new_label;
+	string op_translate;
+	bool hasTamanho = false;
+
+	op = op_umap_str[atr_2.traducao];
+	op_translate = matrix[op][atr_1.tipo][atr_3.tipo];
+	new_type = op_translate[0] - '0';
+
+	if(op_translate == ERROR_VALUE)
+	{
+		string tipo_1 = atr_1.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_1.tipo];
+		string tipo_2 = atr_3.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_3.tipo];
+
+		yyerror("types_operations()\nOperação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
+	}
+
+	if(atr_1.tipo == STRING || atr_3.tipo == STRING)
+	{
+		hasTamanho = true;
+		umap_label_add(new_label, new_type, hasTamanho);
+	}
+
+	if((atr_1.tipo != atr_3.tipo) && hasTamanho == false)
+	{
+		umap_label_add(new_label, new_type, hasTamanho);
+	}
+
+	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
+	{
+		atr_main.tipo = new_type;
+	}
+
+	op_translate.replace(0, 1, "");
+	//cout << "\n--AA: " << temp_umap[new_label].tipo << endl;
+	//cout << "\n--BB: " << temp_umap[atr_1.label].tipo << endl;
+	//cout << "op_label: " << new_label << " op_size_label: " << temp_umap[new_label].size_label << endl;
+	//cout << "op_label: " << atr_1.label << " op_size_label: " << temp_umap[atr_1.label].size_label << endl;
+	//cout << "op_label: " << atr_3.label << " op_size_label: " << temp_umap[atr_3.label].size_label << endl;
+	if(hasTamanho == true)
+	{
+		replace_all(op_translate, "size_final_str", temp_umap[new_label].size_label);
+		replace_all(op_translate, "size_first_str", temp_umap[atr_1.label].size_label);
+		replace_all(op_translate, "size_second_str", temp_umap[atr_3.label].size_label);
+	}
+
+	//cout << "main: " << atr_main.label << endl;
+
+	replace_all(op_translate, "new_label", new_label);
+	replace_all(op_translate, "first_label", atr_1.label);
+	replace_all(op_translate, "second_label", atr_3.label);
+	replace_all(op_translate, "main_label", atr_main.label);
+	replace_all(op_translate, "operator", op_umap[op]);
+
+	return op_translate;
 }
 
 #endif
