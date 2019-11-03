@@ -297,12 +297,12 @@ int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
 
 string genCountStrLabelStart()
 {
-	return string("CountStrLabelStart") + to_string(strLabelCounter) + ":\n";
+	return string("CountStrLabelStart") + to_string(strLabelCounter) + "\n";
 }
 
 string genCountStrLabelEnd()
 {
-	string str = string("CountStrLabelEnd") + to_string(strLabelCounter) + ":\n";
+	string str = string("CountStrLabelEnd") + to_string(strLabelCounter) + "\n";
 	return str;
 }
 
@@ -323,12 +323,12 @@ string countStringProc()
 	string labelEnd = genCountStrLabelEnd();
 
 	traducao += "\tcountTempLabel = 0\n";
-	traducao += "\t" + labelStart;
+	traducao += "\t" + labelStart + ":";
 	traducao += "\texpTempLabel = buffer[countTempLabel] == \'\\0\';\n";
-	traducao += "\tif(expTempLabel) goto " + genCountStrLabelEnd() + "\n";
+	traducao += "\tif(expTempLabel) goto " + genCountStrLabelEnd() + ";\n";
 	traducao += "\tcountTempLabel = countTempLabel + 1\n";
-	traducao += "\tgoto " + labelStart + "\n";
-	traducao += "\t" + labelEnd + "\n";
+	traducao += "\tgoto " + labelStart + ";\n";
+	traducao += "\t" + labelEnd + ":\n";
 
 	strLabelCounter += 1;
 	return traducao;
