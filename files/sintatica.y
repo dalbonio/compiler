@@ -61,10 +61,10 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 
 BL_IF		: TK_DO COMANDOS BL_ELSE
 			{
-				$$.traducao = "\n/**/\n\t" + if_label_generator() + ":\n";
+				$$.traducao = "\n/**/\n\t" + cmd_label_generator("IF") + ":\n";
 				$$.traducao += $2.traducao;
 				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
-				$$.traducao += "\t" + if_label_end_generator() + ":\n";
+				$$.traducao += "\t" + cmd_label_end_generator("IF") + ":\n";
 				$$.traducao += "\n/**/\n";
 				$$.traducao += $3.traducao;
 				$$.traducao += "\n/**/\n";
@@ -83,8 +83,8 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 				//$$.traducao = "\t}\n";
 				//$$.traducao += "\telse\n\t{\n";
 				$$.traducao = $3.traducao;
-				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + if_label_generator() + ";\n";
-				$$.traducao += "\tgoto " + if_label_end_generator() + ";\n";
+				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + cmd_label_generator("IF") + ";\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator("IF") + ";\n";
 				//$$.traducao += "\n\tif(";
 				//$$.traducao += $3.label;
 				//$$.traducao += ")\n\t{\n";
@@ -99,10 +99,10 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 				//$$.traducao += "\tif(" + if_condition + ") goto " + cmd_label_end_generator();
 				//$$.traducao = "\t\telse\n";
 				//$$.traducao += "\t{\n";
-				$$.traducao = "\t" + if_label_generator() + ":\n";
+				$$.traducao = "\t" + cmd_label_generator("IF") + ":\n";
 				$$.traducao += $3.traducao;
 				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
-				$$.traducao += "\t" + if_label_end_generator() + ":\n";
+				$$.traducao += "\t" + cmd_label_end_generator("IF") + ":\n";
 				ifLabelContador++;
 				//$$.traducao += "\t}\n";
 			}
@@ -144,10 +144,15 @@ REC_NUM:	TK_NUM ',' REC_NUM
 
 BL_CASE:    TK_CASE REC_NUM COMANDOS BL_CASE
 			{
+				//\n/**/\n
 				$$.traducao = $2.traducao;
-				$$.traducao += "\tif(" + $2.label + ")\n\t{\n";
-				$$.traducao += $3.traducao + "\t}\n";
+				$$.traducao += "\n/**/\n\tif(" + $2.label + ") goto " + cmd_label_generator("SWITCH") + ";\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator("SWITCH") + ";\n";
+				$$.traducao += "\n/**/\n\t" + cmd_label_generator("SWITCH") + ":\n";
+				$$.traducao += $3.traducao;
+				$$.traducao += "\t" + cmd_label_end_generator("SWITCH") + ":\n\n/**/\n";
 				$$.traducao += $4.traducao;
+				switchLabelContador++;
 			}
 			| BL_DEFAULT
 			{
@@ -157,10 +162,11 @@ BL_CASE:    TK_CASE REC_NUM COMANDOS BL_CASE
 
 BL_DEFAULT: TK_DEFAULT ':' COMANDOS BL_END
 			{
-				$$.traducao =  "\telse\n";
-				$$.traducao += "\t{\n";
+				$$.traducao = "\t" + cmd_label_generator("SWITCH") + ":\n";
 				$$.traducao += $3.traducao;
-				$$.traducao += "\t}\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
+				$$.traducao += "\t" + cmd_label_end_generator("SWITCH") + ":\n\n/**/\n";
+				switchLabelContador++;
 			};
 
 
@@ -223,8 +229,11 @@ COMANDO 	: E
 				}
 
 				replace_all($5.traducao, "VAR_LABEL", label);
-
-				$$.traducao = "\n" + $5.traducao;
+				
+				$$.traducao = "\n/**/\n\t" + cmd_label_generator() + ":\n";
+				$$.traducao += "\n" + $5.traducao;
+				$$.traducao += "\t" + cmd_label_end_generator() + ":\n";
+				cmdLabelContador++;
 			}
 
 			| TK_LOOP '(' E ')'	BLOCO//while
@@ -300,12 +309,12 @@ COMANDO 	: E
 				//string new_label;
 				//umap_label_add(new_label, STRING);
 
-				if_condition = $3.label;
+				//if_condition = $3.label;
 				$$.traducao = "\n/**/\n\t" + cmd_label_generator() + ":\n";
 				$$.traducao += $3.traducao;
 				//$$.traducao += "\t" + new_label + " = !" + $3.label + ";\n";
-				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + if_label_generator() + ";\n";
-				$$.traducao += "\tgoto " + if_label_end_generator() + ";\n";
+				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + cmd_label_generator("IF") + ";\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator("IF") + ";\n";
 				//$$.traducao += "\t{\n";
 				$$.traducao += $5.traducao;
 				$$.traducao += "\t" + cmd_label_end_generator() + ":\n";

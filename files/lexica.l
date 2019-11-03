@@ -47,7 +47,7 @@ OP_LOG and|or
 "*="		                { yylval.traducao = yytext; return TK_CONT; }
 "/="		                { yylval.traducao = yytext; return TK_CONT; }
 
-[#(){}[\];,]	            { return *yytext; }
+[#(){}[\];,:]	            { return *yytext; }
 [=!]		                { return *yytext; }
 [+\-*/]                     { yylval.traducao = yytext; return TK_OP_ARIT; }
 

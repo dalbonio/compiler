@@ -16,14 +16,15 @@ void replace_all(std::string& data, std::string toSearch, std::string replaceStr
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void initialize_op_umap();
 string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
-string cmd_label_generator();
-string cmd_label_end_generator();
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
 string string_to_double(string str_label, string double_label);
 string string_to_int(string str_label, string int_label);
 
-string if_label_generator();
-string if_label_end_generator();
+//string if_label_generator();
+//string if_label_end_generator();
+
+string cmd_label_generator(string cmd_name = "CMD");
+string cmd_label_end_generator(string cmd_name = "CMD");
 
 void yyerror( string MSG )
 {
@@ -370,16 +371,6 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 	return op_translate;
 }
 
-string cmd_label_generator()
-{
-	return string("CMD_") + to_string(cmdLabelContador);
-}
-
-string cmd_label_end_generator()
-{
-	return string("CMD_END_") + to_string(cmdLabelContador);
-}
-
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
 {
 	int op;
@@ -451,7 +442,7 @@ string string_to_int(string str_label, string int_label)
 	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
 }
 
-string if_label_generator()
+/*string if_label_generator()
 {
 	return string("IF_") + to_string(ifLabelContador);
 }
@@ -459,6 +450,46 @@ string if_label_generator()
 string if_label_end_generator()
 {
 	return string("IF_END_") + to_string(ifLabelContador);
+}*/
+
+string cmd_label_generator(string cmd_name)
+{
+	string label_name = cmd_name + string("_");
+
+	if(cmd_name == "IF")
+	{
+		label_name += to_string(ifLabelContador);
+	}
+	else if(cmd_name == "SWITCH")
+	{
+		label_name += to_string(switchLabelContador);
+	}
+	else
+	{
+		label_name += to_string(cmdLabelContador);
+	}
+
+	return label_name;
+}
+
+string cmd_label_end_generator(string cmd_name)
+{
+	string label_end_name = cmd_name + string("_END_");
+
+	if(cmd_name == "IF")
+	{
+		label_end_name += to_string(ifLabelContador);
+	}
+	else if(cmd_name == "SWITCH")
+	{
+		label_end_name += to_string(switchLabelContador);
+	}
+	else
+	{
+		label_end_name += to_string(cmdLabelContador);
+	}
+
+	return label_end_name;
 }
 
 #endif
