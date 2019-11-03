@@ -95,11 +95,13 @@ void initialize_tipo_umap()
 	tipo_umap[STRING] = "char*";
 	tipo_umap[BOOLEAN] = "int";
 	tipo_umap[DOUBLE] = "double";
+	tipo_umap[ITERATOR] = "int";
 
 	tipo_umap_str["int"] = INT;
 	tipo_umap_str["string"] = STRING;
 	tipo_umap_str["boolean"] = BOOLEAN;
 	tipo_umap_str["double"] = DOUBLE;
+	tipo_umap_str["iterator"] = ITERATOR;
 }
 
 void initialize_op_umap()
@@ -161,12 +163,21 @@ void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 	if(hasTamanho)
 	{
 		string size_label = label_generator();
+		string start_label = label_generator();
+		string end_label = label_generator();
+		string step_label = label_generator();
 		//cout << "size: " << size_label << endl;
 		variavel size_var;
 		size_var.tipo = INT;
 		temp_umap[size_label] = size_var;
+		temp_umap[start_label] = size_var;
+		temp_umap[end_label] = size_var;
+		temp_umap[step_label] = size_var;
 
 		new_var.size_label = size_label;
+		new_var.start_label = start_label;
+		new_var.end_label = end_label;
+		new_var.step_label = step_label;
 		//cout << "size_label: " << size_label << " " << new_var.size_label << endl;
 	}
 

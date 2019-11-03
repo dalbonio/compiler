@@ -620,12 +620,14 @@ E 			: '(' E ')'
 				string label_end = temp_umap[$$.label].end_label;
 				string label_step = temp_umap[$$.label].step_label;
 
-				$$.traducao = string("\t") + "pEndTemp1 = " + $3.label + " - " + $1.label + ";\n";
+				$$.traducao = $1.traducao + $3.traducao + $5.traducao;
+				$$.traducao += string("\t") + "pEndTemp1 = " + $3.label + " - " + $1.label + ";\n";
 				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $5.label + ";\n";
 				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $5.label + ";\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
 				$$.traducao += "\t" + label_step + " = " + $5.label + ";\n";
+				$$.traducao += "\t" + $$.label + " = -1;\n";
 			}
 			| E ':' E
 			{
@@ -639,9 +641,11 @@ E 			: '(' E ')'
 				string label_end = temp_umap[$$.label].end_label;
 				string label_step = temp_umap[$$.label].step_label;
 
+				$$.traducao = $1.traducao + $3.traducao;
 				$$.traducao += "\t" + label_end + " = " + $3.label + ";\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
 				$$.traducao += "\t" + label_step + " = 1;\n";
+				$$.traducao += "\t" + $$.label + " = -1;\n";
 			}
 			;
 
@@ -686,7 +690,6 @@ ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
 				$1.label = get_current_context_id_label($1.traducao);
-				//cout << $1.label;
 
 				bool hasTamanho = false;
 
@@ -695,12 +698,25 @@ ATR 		: TK_ID '=' E
 					hasTamanho = true;
 					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
 				}
+				if($3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
+				{
+					temp_umap[$1.label].start_label = temp_umap[$3.label].start_label;
+					temp_umap[$1.label].step_label = temp_umap[$3.label].step_label;
+					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
+				}
 
 				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
 				{
 					$$.tipo = $3.tipo;
 					//criar uma temporaria nova pra guardar o antigo valor
-					$$.label = add_variable_in_current_context($1.traducao, $$.tipo, hasTamanho);
+					if($$.tipo != ITERATOR)
+					{
+						$$.label = add_variable_in_current_context($1.traducao, $$.tipo, hasTamanho);
+					}
+					else
+					{
+						$$.label = add_iterator_in_current_context($1.traducao);
+					}
 				}
 				else
 				{
