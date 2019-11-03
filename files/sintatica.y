@@ -61,8 +61,15 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 
 BL_IF		: TK_DO COMANDOS BL_ELSE
 			{
-				$$.traducao =  $2.traducao;
+				$$.traducao = "\n/**/\n\t" + if_label_generator() + ":\n";
+				$$.traducao += $2.traducao;
+				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
+				$$.traducao += "\t" + if_label_end_generator() + ":\n";
+				$$.traducao += "\n/**/\n";
 				$$.traducao += $3.traducao;
+				$$.traducao += "\n/**/\n";
+				ifLabelContador++;
+				//cmdLabelContador++;
 			};
 
 
@@ -83,14 +90,20 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 			}
 			| TK_ELSE TK_DO COMANDOS BL_END
 			{
-				$$.traducao =  "\t\telse\n";
-				$$.traducao += "\t{\n";
+				//$$.traducao += "\n/**/\n";
+				//$$.traducao += "\tif(" + if_condition + ") goto " + cmd_label_end_generator();
+				//$$.traducao = "\t\telse\n";
+				//$$.traducao += "\t{\n";
+				$$.traducao = "\t" + if_label_generator() + ":\n";
 				$$.traducao += $3.traducao;
-				$$.traducao += "\t}\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
+				$$.traducao += "\t" + if_label_end_generator() + ":\n";
+				ifLabelContador++;
+				//$$.traducao += "\t}\n";
 			}
 			| BL_END
 			{
-				$$.traducao = "\t}\n";
+				$$.traducao = "\n";
 			};
 
 
@@ -279,10 +292,19 @@ COMANDO 	: E
 					yyerror("Erro\n");
 				}
 
-				$$.traducao = $3.traducao;
-				$$.traducao += "\tif(" + $3.label + ")\n";
-				$$.traducao += "\t{\n";
+				//string new_label;
+				//umap_label_add(new_label, STRING);
+
+				if_condition = $3.label;
+				//$$.traducao = "\t" + cmd_label_generator() + ":\n";
+				$$.traducao += $3.traducao;
+				//$$.traducao += "\t" + new_label + " = !" + $3.label + ";\n";
+				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + if_label_generator() + ";\n";
+				$$.traducao += "\tgoto " + if_label_end_generator() + ";\n";
+				//$$.traducao += "\t{\n";
 				$$.traducao += $5.traducao;
+				$$.traducao += "\t" + cmd_label_end_generator() + ":\n";
+				cmdLabelContador++;
 			}
 			| TK_ID ',' REC_ATR ',' E
 			{

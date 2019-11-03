@@ -22,6 +22,9 @@ int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
 string string_to_double(string str_label, string double_label);
 string string_to_int(string str_label, string int_label);
 
+string if_label_generator();
+string if_label_end_generator();
+
 void yyerror( string MSG )
 {
 	cout << "\n---\n" << "linha " << contadorLinha << ": " << MSG << "\n---\n";
@@ -446,6 +449,16 @@ string string_to_double(string str_label, string double_label)
 string string_to_int(string str_label, string int_label)
 {
 	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
+}
+
+string if_label_generator()
+{
+	return string("IF_") + to_string(ifLabelContador);
+}
+
+string if_label_end_generator()
+{
+	return string("IF_END_") + to_string(ifLabelContador);
 }
 
 #endif

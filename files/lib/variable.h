@@ -37,4 +37,8 @@ int contadorLinha = 1;
 int cmdLabelContador = 0;
 int strLabelCounter = 0;
 
+stack <string> labels_if;
+int ifLabelContador = 0;
+string if_condition = "";
+
 #endif

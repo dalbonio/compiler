@@ -1,2 +1,6 @@
-a = "abc"
-b = a[2]
+a = 1
+if(a eq 1) do
+    print(1)
+else do
+    print(a)
+end
