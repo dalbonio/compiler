@@ -68,7 +68,7 @@ BL_IF		: TK_DO COMANDOS BL_ELSE
 				$$.traducao += "\n/**/\n";
 				$$.traducao += $3.traducao;
 				$$.traducao += "\n/**/\n";
-				ifLabelContador++;
+				//ifLabelContador++;
 				//cmdLabelContador++;
 			};
 
@@ -296,7 +296,7 @@ COMANDO 	: E
 				//umap_label_add(new_label, STRING);
 
 				if_condition = $3.label;
-				//$$.traducao = "\t" + cmd_label_generator() + ":\n";
+				$$.traducao = "\n/**/\n\t" + cmd_label_generator() + ":\n";
 				$$.traducao += $3.traducao;
 				//$$.traducao += "\t" + new_label + " = !" + $3.label + ";\n";
 				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + if_label_generator() + ";\n";
@@ -305,6 +305,7 @@ COMANDO 	: E
 				$$.traducao += $5.traducao;
 				$$.traducao += "\t" + cmd_label_end_generator() + ":\n";
 				cmdLabelContador++;
+				ifLabelContador++;
 			}
 			| TK_ID ',' REC_ATR ',' E
 			{
