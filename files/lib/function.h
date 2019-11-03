@@ -328,7 +328,7 @@ string implicit_conversion_op(atributos& atr_main, atributos atr_1, atributos at
 		string tipo_1 = atr_1.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_1.tipo];
 		string tipo_2 = atr_3.tipo == BOOLEAN ? "boolean" : tipo_umap[atr_3.tipo];
 
-		yyerror("Operação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
+		yyerror("implicit_conversion_op()\nOperação \"" + atr_2.traducao + "\" entre os tipos \"" + tipo_1 + "\" e \"" + tipo_2 + "\" não pode ser realizada.");
 	}
 
 	if(atr_1.tipo == STRING || atr_3.tipo == STRING)

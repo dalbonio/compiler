@@ -77,7 +77,7 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 			{
 				if($3.tipo != BOOLEAN)
 				{
-					yyerror("condition errada");
+					yyerror("BL_ELSE -> TK_ELSEIF '(' E ')' BL_IF\ncondition errada");
 				}
 
 				//$$.traducao = "\t}\n";
@@ -218,14 +218,14 @@ COMANDO 	: E
 			{
 				if( $3.tipo != INT )//POR ENQUANTO
 				{
-					yyerror(string("Tipo ") + " invalido para comando SWITCH.");
+					yyerror("COMANDO -> TK_SWITCH '(' TK_ID ')' BL_SWITCH\n" + string("Tipo ") + " invalido para comando SWITCH.");
 				}
 
 				string label = search_variable($3.traducao);
 
 				if(label == "0")
 				{
-					yyerror("Variável não declarada anteriormente");
+					yyerror("COMANDO -> TK_SWITCH '(' TK_ID ')' BL_SWITCH\nVariável não declarada anteriormente");
 				}
 
 				replace_all($5.traducao, "VAR_LABEL", label);
@@ -236,11 +236,11 @@ COMANDO 	: E
 				cmdLabelContador++;
 			}
 
-			| TK_LOOP '(' E ')'	BLOCO//while
+			| TK_LOOP '(' E ')' BLOCO//while
 			{
 				if($3.tipo != BOOLEAN)
 				{
-					yyerror("condition errada");
+					yyerror("COMANDO -> TK_LOOP '(' E ')' BLOCO//while\ncondition errada");
 				}
 
 				string new_label = label_generator();
@@ -260,7 +260,7 @@ COMANDO 	: E
 			{
 				if($4.tipo != BOOLEAN)
 				{
-					yyerror("condition errada");
+					yyerror("COMANDO -> BLOCO TK_LOOP '(' E ')'//do while\ncondition errada");
 				}
 
 				string new_label = $4.label;
@@ -276,11 +276,11 @@ COMANDO 	: E
 				//$$.traducao += "\tgoto " + cmd_label[0] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
-			| TK_LOOP '(' ATR ';' E ';' CONT ')' BLOCO //for
+			| TK_LOOP '(' ATR ';' E ';' CONT ')' BLOCO//for
 			{
 				if($2.tipo != BOOLEAN)
 				{
-					yyerror("This condition is not a boolean.\n");
+					yyerror("COMANDO -> TK_LOOP '(' ATR ';' E ';' CONT ')' BLOCO//for\nThis condition is not a boolean.\n");
 				}
 
 				string new_label;
@@ -303,7 +303,7 @@ COMANDO 	: E
 			{
 				if($3.tipo != BOOLEAN)
 				{
-					yyerror("Erro\n");
+					yyerror("COMANDO -> TK_IF '(' E ')' BL_IF\nErro\n");
 				}
 
 				//string new_label;
@@ -398,12 +398,12 @@ E 			: '(' E ')'
 
 				if($$.tipo == BOOLEAN)
 				{
-					yyerror("Não existe conversão para boolean");
+					yyerror("E -> '(' TK_CASTING ')' E\nNão existe conversão para boolean");
 				}
 
 				if($$.tipo == $4.tipo)
 				{
-					yyerror(string("Não pode converter a variável para o tipo \"") + $2.label + string("\", pois ela já é desse tipo"));
+					yyerror("E -> '(' TK_CASTING ')' E\n" + string("Não pode converter a variável para o tipo \"") + $2.label + string("\", pois ela já é desse tipo"));
 				}
 
 				if($4.tipo == STRING)
@@ -426,7 +426,7 @@ E 			: '(' E ')'
 			{
 				if($3.label == "boolean")
 				{
-					yyerror("nao tem como fazer input em boolean");
+					yyerror("E -> TK_INPUT '(' TK_CASTING ')'\nnao tem como fazer input em boolean");
 				}
 
 				if($3.label == "string")
@@ -464,16 +464,16 @@ E 			: '(' E ')'
 				$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * "+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", buffer);\n";
 			}
-			| TK_OP_ARIT E
+			| TK_OP_ARIT E//unário
 			{
 				if($1.traducao != "-")
 				{
-					yyerror("operation before expression");
+					yyerror("E -> TK_OP_ARIT E//unário\noperation before expression");
 				}
 
 				if($2.tipo != INT && $2.tipo != DOUBLE)
 				{
-					yyerror("this operation is not allowed for this primitive");
+					yyerror("E -> TK_OP_ARIT E//unário\nthis operation is not allowed for this primitive");
 				}
 
 				$$.tipo = $2.tipo;
@@ -508,14 +508,14 @@ E 			: '(' E ')'
 				}
 				else
 				{
-					yyerror("expression has no length attribute");
+					yyerror("E -> '#' E\nexpression has no length attribute");
 				}
 			}
 			| E '[' E ']'
 			{
 				if($3.tipo != INT )
 				{
-					yyerror("expression doesnt evaluate to integer");
+					yyerror("E -> E '[' E ']'\nexpression doesnt evaluate to integer");
 				}
 
 				if(has_length.find($1.tipo) != has_length.end())
@@ -542,7 +542,7 @@ E 			: '(' E ')'
 				}
 				else
 				{
-					yyerror("expression has no length attribute");
+					yyerror("E -> E '[' E ']'\nexpression has no length attribute");
 				}
 			}
 			| COND
@@ -605,7 +605,7 @@ E 			: '(' E ')'
 
 				if ($$.tipo == 0)
 				{
-					yyerror("variable " + $1.traducao + " not declared");
+					yyerror("E -> TK_ID\nvariable " + $1.traducao + " not declared");
 				}
 
 				$$.traducao = "";
@@ -703,7 +703,7 @@ COND 		: E TK_OP_REL E
 			{
 				if($2.tipo != BOOLEAN)
 				{
-					yyerror("O operador \"not\" não pode ser utilizado com variável do tipo " + tipo_umap[$2.tipo]);
+					yyerror("COND -> TK_NOT E\nO operador \"not\" não pode ser utilizado com variável do tipo " + tipo_umap[$2.tipo]);
 				}
 
 				$$.tipo = $2.tipo;
@@ -717,7 +717,7 @@ CONT		: TK_ID TK_CONT E
 			{
 				if(temp_umap[$1.label].tipo == 0 || temp_umap[$1.label].tipo >= BOOLEAN)
 				{
-					yyerror("NO!!!");
+					yyerror("CONT -> TK_ID TK_CONT E\nNO!!!");
 				}
 
 				$$.traducao = $3.traducao;
