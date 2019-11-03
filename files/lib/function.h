@@ -13,6 +13,7 @@ void initialize_op_umap();
 void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
 
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
+void umap_label_add_iterator(string& new_label);
 string search_variable(string var_name);
 string get_current_context_id_label(string user_label);
 string get_id_label(string user_label);
@@ -173,6 +174,30 @@ void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 	//cout << "label: " << new_label << " size_label: " << temp_umap[new_label].size_label << endl;
 }
 
+void umap_label_add_iterator(string& new_label)
+{
+	new_label = label_generator();
+	variavel new_var;
+	new_var.tipo = ITERATOR;
+
+	string start_label = label_generator();
+	string end_label = label_generator();
+	string step_label = label_generator();
+
+	variavel size_var;
+	size_var.tipo = INT;
+
+	temp_umap[start_label] = size_var;
+	temp_umap[end_label] = size_var;
+	temp_umap[step_label] = size_var;
+
+	new_var.start_label = start_label;
+	new_var.end_label = end_label;
+	new_var.step_label = step_label;
+
+	temp_umap[new_label] = new_var;
+}
+
 string search_variable(string var_name)
 {
 	for(int i = context_stack.size() - 1; i >= 0 ; i--)
@@ -225,11 +250,20 @@ string get_id_label(string user_label)
 	return label;
 }
 
-string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false)
+string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho)
 {
 	auto cur_umap = context_stack.back();
 	string new_label;
 	umap_label_add(new_label, tipo, hasTamanho);
+	//cout << "con_label: " << new_label << " con_size_label: " << temp_umap[new_label].size_label << endl;
+	cur_umap[var_name] = new_label;
+}
+
+string add_iterator_in_current_context(string var_name)
+{
+	auto cur_umap = context_stack.back();
+	string new_label;
+	umap_label_add_iterator(new_label);
 	//cout << "con_label: " << new_label << " con_size_label: " << temp_umap[new_label].size_label << endl;
 	cur_umap[var_name] = new_label;
 }
@@ -239,6 +273,9 @@ void initialize_proc_temp_umap()
 	proc_temp_umap["countTempLabel"] = INT;
 	proc_temp_umap["boundaryCheckTemp"] = INT;
 	proc_temp_umap["posTemp"] = INT;
+	proc_temp_umap["pEndTemp1"] = INT;
+	proc_temp_umap["pEndTemp2"] = INT;
+	proc_temp_umap["pEndTemp3"] = INT;
 
 
 	has_length.insert(pair<int, bool>(STRING, true));

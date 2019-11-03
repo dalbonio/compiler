@@ -5,12 +5,13 @@
 
 #define ERROR_VALUE "-1"
 #define QTD_OPERATORS 12
-#define QTD_TYPES 4
+#define QTD_TYPES 5
 
 #define INT 1
 #define DOUBLE 2
 #define BOOLEAN 3
 #define STRING 4
+#define ITERATOR 5
 
 #define ADD 1
 #define SUB 2

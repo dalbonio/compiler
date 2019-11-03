@@ -229,7 +229,7 @@ COMANDO 	: E
 				}
 
 				replace_all($5.traducao, "VAR_LABEL", label);
-				
+
 				$$.traducao = "\n/**/\n\t" + cmd_label_generator() + ":\n";
 				$$.traducao += "\n" + $5.traducao;
 				$$.traducao += "\t" + cmd_label_end_generator() + ":\n";
@@ -520,8 +520,6 @@ E 			: '(' E ')'
 
 				if(has_length.find($1.tipo) != has_length.end())
 				{
-					$$.label = label_generator();
-
 					$$.traducao = $1.traducao + $3.traducao;
 					$$.traducao += "\tif(" + $3.label + "== 0) goto OutOfBoundsError;\n";
 					$$.traducao += "\telse if(" + $3.label + " < 0 ) tempPos = " + temp_umap[$1.label].size_label + " + " + $3.label + ";\n";
@@ -609,6 +607,41 @@ E 			: '(' E ')'
 				}
 
 				$$.traducao = "";
+			}
+			| E ':' E ':' E
+			{
+				if( $1.tipo != INT || $3.tipo != INT || $5.tipo != INT)
+					yyerror("only int available to iterators");
+
+				$$.tipo = ITERATOR;
+				umap_label_add_iterator($$.label);
+
+				string label_start = temp_umap[$$.label].start_label;
+				string label_end = temp_umap[$$.label].end_label;
+				string label_step = temp_umap[$$.label].step_label;
+
+				$$.traducao = string("\t") + "pEndTemp1 = " + $3.label + " - " + $1.label + ";\n";
+				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $5.label + ";\n";
+				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $5.label + ";\n";
+				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
+				$$.traducao += "\t" + label_step + " = " + $5.label + ";\n";
+			}
+			| E ':' E
+			{
+				if($1.tipo != INT || $3.tipo != INT)
+					yyerror("only int available to iterators");
+
+				$$.tipo = ITERATOR;
+				umap_label_add_iterator($$.label);
+
+				string label_start = temp_umap[$$.label].start_label;
+				string label_end = temp_umap[$$.label].end_label;
+				string label_step = temp_umap[$$.label].step_label;
+
+				$$.traducao += "\t" + label_end + " = " + $3.label + ";\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
+				$$.traducao += "\t" + label_step + " = 1;\n";
 			}
 			;
 
