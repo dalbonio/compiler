@@ -225,7 +225,7 @@ string get_id_label(string user_label)
 	return label;
 }
 
-string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false)
+string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho)
 {
 	auto cur_umap = context_stack.back();
 	string new_label;
@@ -370,6 +370,19 @@ void set_string_matrix()
 	string command6 = "\tstrcat(new_label, second_label);\n";
 	string command7 = "\tmain_label = new_label;\n";
 	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
+	
+	for(int i = EQ; i <= LESS; i++)
+	{
+		string command1 = "\tnew_label = strcmp(first_label, second_label);\n";
+		string command2 = "\tnew_label = new_label operator 0;\n";
+		string command3 = "\tif(new_label) goto string_start;\n";
+		string command4 = "\tmain_label = 0;\n";
+		string command5 = "\tgoto string_end;\n";
+		string command6 = "\tstring_start:\n";
+		string command7 = "\tmain_label = 1;\n";
+		string command8 = "\tstring_end:\n";
+		matrix[i][STRING][STRING] = to_string(BOOLEAN) + command1 + command2 + command3 + command4 + command5 + command6 + command7 + command8;
+	}
 }
 
 void initialize_matrix()
@@ -402,6 +415,10 @@ string cmd_label_generator(string cmd_name)
 	{
 		label_name += to_string(switchLabelContador);
 	}
+	else if(cmd_name == "STRING")
+	{
+		label_name += to_string(strLabelCounter);
+	}
 	else
 	{
 		label_name += to_string(cmdLabelContador);
@@ -421,6 +438,10 @@ string cmd_label_end_generator(string cmd_name)
 	else if(cmd_name == "SWITCH")
 	{
 		label_end_name += to_string(switchLabelContador);
+	}
+	else if(cmd_name == "STRING")
+	{
+		label_end_name += to_string(strLabelCounter);
 	}
 	else
 	{
@@ -478,6 +499,13 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 		replace_all(op_translate, "size_final_str", temp_umap[new_label].size_label);
 		replace_all(op_translate, "size_first_str", temp_umap[atr_1.label].size_label);
 		replace_all(op_translate, "size_second_str", temp_umap[atr_3.label].size_label);
+
+		if(op >= EQ && op <= LESS)
+		{
+			replace_all(op_translate, "string_start", cmd_label_generator("STRING"));
+			replace_all(op_translate, "string_end", cmd_label_end_generator("STRING"));
+			strLabelCounter++;
+		}
 	}
 
 	//cout << "main: " << atr_main.label << endl;
