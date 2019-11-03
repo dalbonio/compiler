@@ -37,9 +37,10 @@ S 			: BP //bloco principal
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
 				cout <<	"\nint main(void)\n{\n";
 				cout << "\tchar* buffer;\n";
-				cout << "\tchar* error msg = malloc(sizeof(char) * 800)";
 				cout << declare_variables();
-				cout << $1.traducao << "\n\treturn 0;\n}" << endl;
+				cout << "\tgoto Start;\n";
+				cout << outOfBoundsError();
+				cout << "\tStart: \n" << $1.traducao << "\n\tEnd_Of_Stream:\n\treturn 0;\n}" << endl;
 			}
 			;
 
@@ -485,10 +486,10 @@ E 			: '(' E ')'
 					$$.label = label_generator();
 
 					$$.traducao = $1.traducao + $3.traducao;
-					$$.traducao += "\tif(" + $3.label + "== 0){ strcpy(errorMsg, \"0 is invalid index\"); goto Error;}\n";
+					$$.traducao += "\tif(" + $3.label + "== 0) goto OutOfBoundsError;\n";
 					$$.traducao += "\telse if(" + $3.label + " < 0 ) tempPos = " + temp_umap[$1.label].size_label + " + " + $3.label + ";\n";
 					$$.traducao += "\telse tempPos = " + $3.label + " - 1;\n";
-					$$.traducao += "\tif(posTemp < 0 || posTemp >= " + temp_umap[$1.label].size_label + "){ strcpy(errorMsg, \"out of bounds\"); goto Error;}\n";
+					$$.traducao += "\tif(posTemp < 0 || posTemp >= " + temp_umap[$1.label].size_label + ") goto OutOfBoundsError;\n";
 					//new $$ type is array $1 associated type.
 					//Ex: if $1 is int array, $$ type is int
 					if($1.tipo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"

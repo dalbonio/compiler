@@ -430,6 +430,14 @@ string countStringProc()
 	return traducao;
 }
 
+string outOfBoundsError()
+{
+	string traducao = string("\tOutOfBoundsError:\n");
+	traducao += "\tcout << \"Index out of bounds\";\n";
+	traducao += "\tgoto End_Of_Stream;\n";
+	return traducao;
+}
+
 string string_to_double(string str_label, string double_label)
 {
 	return string("\tsscanf(") + str_label + string(", \"%lf\", &") + double_label + string(");\n");
