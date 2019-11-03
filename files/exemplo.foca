@@ -1,6 +1,12 @@
-a = 1
+a = 3
 if(a eq 1) do
     print(1)
+elif(a eq 2) do
+    if(true) do
+        print(2)
+    end
+elif(a eq 3) do
+    print(3)
 else do
-    print(a)
+    print("fe")
 end

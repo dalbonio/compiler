@@ -80,13 +80,18 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 					yyerror("condition errada");
 				}
 
-				$$.traducao = "\t}\n";
-				$$.traducao += "\telse\n\t{\n" + $3.traducao;
-				$$.traducao += "\n\tif(";
-				$$.traducao += $3.label;
-				$$.traducao += ")\n\t{\n";
+				//$$.traducao = "\t}\n";
+				//$$.traducao += "\telse\n\t{\n";
+				$$.traducao = $3.traducao;
+				$$.traducao += "\n/**/\n\tif(" + $3.label + ") " + "goto " + if_label_generator() + ";\n";
+				$$.traducao += "\tgoto " + if_label_end_generator() + ";\n";
+				//$$.traducao += "\n\tif(";
+				//$$.traducao += $3.label;
+				//$$.traducao += ")\n\t{\n";
+				//$$.traducao += "\n/**/\n";
 				$$.traducao += $5.traducao;
-				$$.traducao += "\n\t}\n";
+				ifLabelContador++;
+				//$$.traducao += "\n\t}\n";
 			}
 			| TK_ELSE TK_DO COMANDOS BL_END
 			{
