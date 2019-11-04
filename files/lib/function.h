@@ -191,6 +191,7 @@ void umap_label_add_iterator(string& new_label)
 	variavel new_var;
 	new_var.tipo = ITERATOR;
 
+	string size_label = label_generator();
 	string start_label = label_generator();
 	string end_label = label_generator();
 	string step_label = label_generator();
@@ -198,10 +199,12 @@ void umap_label_add_iterator(string& new_label)
 	variavel size_var;
 	size_var.tipo = INT;
 
+	temp_umap[size_label] = size_var;
 	temp_umap[start_label] = size_var;
 	temp_umap[end_label] = size_var;
 	temp_umap[step_label] = size_var;
 
+	new_var.size_label = size_label;
 	new_var.start_label = start_label;
 	new_var.end_label = end_label;
 	new_var.step_label = step_label;
@@ -283,6 +286,7 @@ void initialize_proc_temp_umap()
 {
 	proc_temp_umap["countTempLabel"] = INT;
 	proc_temp_umap["boundaryCheckTemp"] = INT;
+	proc_temp_umap["tempPos"] = INT;
 	proc_temp_umap["posTemp"] = INT;
 	proc_temp_umap["pEndTemp1"] = INT;
 	proc_temp_umap["pEndTemp2"] = INT;

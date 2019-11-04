@@ -33,8 +33,8 @@ int yylex(void);
 
 S 			: BP //bloco principal
 			{
-				cout << "\n/*Compilador FOCA*/\n";
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
+				cout << "using namespace std;";
 				cout <<	"\nint main(void)\n{\n";
 				cout << "\tchar* buffer;\n";
 				cout << declare_variables();
@@ -210,7 +210,7 @@ COMANDO 	: E
 				}
 				else
 				{
-					$$.traducao =  $3.traducao + "\t" + string("cout >> ") + $3.label + ";\n";
+					$$.traducao =  $3.traducao + "\t" + string("cout << ") + $3.label + " << endl;\n";
 				}
 			}
 
@@ -513,29 +513,70 @@ E 			: '(' E ')'
 			}
 			| E '[' E ']'
 			{
-				if($3.tipo != INT )
+				if($3.tipo != INT && $3.tipo != ITERATOR)
 				{
-					yyerror("E -> E '[' E ']'\nexpression doesnt evaluate to integer");
+					yyerror(string("E -> E '[' E ']'\nexpression doesnt evaluate to") + tipo_umap[$3.tipo]);
 				}
 
 				if(has_length.find($1.tipo) != has_length.end())
 				{
-					$$.traducao = $1.traducao + $3.traducao;
-					$$.traducao += "\tif(" + $3.label + "== 0) goto OutOfBoundsError;\n";
-					$$.traducao += "\telse if(" + $3.label + " < 0 ) tempPos = " + temp_umap[$1.label].size_label + " + " + $3.label + ";\n";
-					$$.traducao += "\telse tempPos = " + $3.label + " - 1;\n";
-					$$.traducao += "\tif(posTemp < 0 || posTemp >= " + temp_umap[$1.label].size_label + ") goto OutOfBoundsError;\n";
-					//new $$ type is array $1 associated type.
-					//Ex: if $1 is int array, $$ type is int
-					if($1.tipo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
+					string size_label = temp_umap[$1.label].size_label;
+					string start = temp_umap[$1.label].start_label;
+					string step = temp_umap[$1.label].step_label;
+					string end = temp_umap[$1.label].end_label;
+					if($3.tipo != ITERATOR)
+					{
+
+						$$.traducao = $1.traducao + $3.traducao;
+						$$.traducao += "\ttempPos = " + step + " * " + $3.label + ";\n";
+						$$.traducao += "\ttempPos = tempPos + " + start + ";\n";
+						$$.traducao += "\tif(tempPos < 0 ) tempPos = " + size_label + " + " + $3.label + ";\n";
+						$$.traducao += "\telse tempPos = tempPos - 1;\n";
+						$$.traducao += "\tif(tempPos < 0 ) tempPos = " + size_label + " + tempPos;\n";
+						$$.traducao += "\tif(tempPos < 0 || tempPos >= " + size_label + ") goto OutOfBoundsError;\n";
+						//new $$ type is array $1 associated type.
+						//Ex: if $1 is int array, $$ type is int
+						if($1.tipo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
+						{
+							$$.tipo = STRING;
+							umap_label_add($$.label, $$.tipo, true);
+							string label_tamanho = temp_umap[$$.label].size_label;
+
+							$$.traducao += "\t" + label_tamanho + " = 2;\n";
+							$$.traducao += "\t" + step + " = 1; //step\n";
+							$$.traducao += "\t" + start + " = 0; //start\n";
+							$$.traducao += "\t" + end + " = 2; //end\n";
+							$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
+							$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[tempPos];" + $1.label + "[1] = \'\\0\';\n";
+						}
+					}
+					else
 					{
 						$$.tipo = STRING;
 						umap_label_add($$.label, $$.tipo, true);
-						string label_tamanho = temp_umap[$$.label].size_label;
 
-						$$.traducao += "\t" + label_tamanho + " = 1;\n";
-						$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
-						$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[" + $3.label + "];" + $3.label + "[1] = \'\\0\';\n";
+						string label_tamanho_iter = temp_umap[$3.label].size_label;
+						string start_old = temp_umap[$3.label].start_label;
+						string step_old = temp_umap[$3.label].step_label;
+						string end_old = temp_umap[$3.label].end_label;
+
+						string label_tamanho_arr = temp_umap[$1.label].size_label;
+
+						string label_tamanho_new = temp_umap[$$.label].size_label;
+						string start_new = temp_umap[$$.label].start_label;
+						string step_new = temp_umap[$$.label].step_label;
+						string end_new = temp_umap[$$.label].end_label;
+
+						$$.traducao = $1.traducao + $3.traducao;
+						$$.traducao += "\tif(" + start_old + " < 0) goto OutOfBoundsError;\n";
+						$$.traducao += "\tif(" + start_old + " > " + label_tamanho_arr + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\tif(" + end_old + " < 0) goto OutOfBoundsError;\n";
+						$$.traducao += "\tif(" + end_old + " > " + label_tamanho_arr + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\t" + step_new + " = " + step_old + "; //step\n";
+						$$.traducao += "\t" + start_new + " = " + start_old + "; //start\n";
+						$$.traducao += "\t" + end_new + " = " + end_old + "; //end \n ";
+						$$.traducao += "\t" + label_tamanho_new + " = " + label_tamanho_iter + "; //tamanho\n";
+						$$.traducao += "\t" + $$.label + " = &" + $1.label + "[" + start_new + "]; //referece\n";
 					}
 				}
 				else
@@ -591,7 +632,14 @@ E 			: '(' E ')'
 				umap_label_add($$.label, $$.tipo, true);
 				//cout << "label: " << $$.label << endl;
 				string label_tamanho = temp_umap[$$.label].size_label;
-				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + ";\n";
+				string start = temp_umap[$$.label].start_label;
+				string end = temp_umap[$$.label].end_label;
+				string step = temp_umap[$$.label].step_label;
+
+				$$.traducao = "\t" + label_tamanho + " = " + to_string(str.length() + 1) + "; //tamanho string\n";
+				$$.traducao += "\t" + start + " = 0;  //start index string\n";
+				$$.traducao += "\t" + end + " = " + label_tamanho + " - 1; //final index string\n";
+				$$.traducao += "\t" + step + " = 1; //step string\n";
 				$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * "+ label_tamanho +");\n";
 				$$.traducao += "\tstrcpy(" + $$.label + ", \"" + str + "\");\n";
 			}
@@ -619,14 +667,20 @@ E 			: '(' E ')'
 				string label_start = temp_umap[$$.label].start_label;
 				string label_end = temp_umap[$$.label].end_label;
 				string label_step = temp_umap[$$.label].step_label;
+				string label_tamanho = temp_umap[$$.label].size_label;
 
 				$$.traducao = $1.traducao + $3.traducao + $5.traducao;
 				$$.traducao += string("\t") + "pEndTemp1 = " + $3.label + " - " + $1.label + ";\n";
 				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $5.label + ";\n";
 				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $5.label + ";\n";
+				$$.traducao += "\tposTemp = " + $1.label + " - " + $3.label + ";\n";
+				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+				$$.traducao += "\t" + label_tamanho + " = posTemp / " + $5.label + ";\n";
+				$$.traducao += "\t" + label_tamanho + " = " + label_tamanho + " + 1; //tamanho\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
-				$$.traducao += "\t" + label_step + " = " + $5.label + ";\n";
+				$$.traducao += "\t" + label_end + " = " + label_end + " - 1; //end\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + " - 1; //start\n";
+				$$.traducao += "\t" + label_step + " = " + $5.label + "; //step\n";
 				$$.traducao += "\t" + $$.label + " = -1;\n";
 			}
 			| E ':' E
@@ -640,12 +694,16 @@ E 			: '(' E ')'
 				string label_start = temp_umap[$$.label].start_label;
 				string label_end = temp_umap[$$.label].end_label;
 				string label_step = temp_umap[$$.label].step_label;
+				string label_tamanho = temp_umap[$$.label].size_label;
 
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += "\t" + label_end + " = " + $3.label + ";\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + ";\n";
-				$$.traducao += "\t" + label_step + " = 1;\n";
-				$$.traducao += "\t" + $$.label + " = -1;\n";
+				$$.traducao += "\t" + label_end + " = " + $3.label + " - 1; //end\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + " - 1; //start\n";
+				$$.traducao += "\t" + label_step + " = 1; //step\n";
+				$$.traducao += "\ttempPos = " + label_start + " - " + label_end + ";\n";
+				$$.traducao += "\tif(tempPos < 0) tempPos = tempPos * -1;\n";
+				$$.traducao += "\t" + label_tamanho + " = tempPos + 1; //tamanho\n";
+				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n";
 			}
 			;
 
@@ -697,6 +755,9 @@ ATR 		: TK_ID '=' E
 				{
 					hasTamanho = true;
 					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
+					temp_umap[$1.label].start_label = temp_umap[$3.label].start_label;
+					temp_umap[$1.label].step_label = temp_umap[$3.label].step_label;
+					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
 				}
 				if($3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
 				{
@@ -801,7 +862,7 @@ int yyparse();
 int main( int argc, char* argv[] )
 {
 	yy_flex_debug = 1;
-	yydebug = 1;
+	yydebug = atoi(argv[1]);
 	context_stack.push_back(unordered_map<string, string>());
 	initialize_tipo_umap();
 	initialize_proc_temp_umap();

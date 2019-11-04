@@ -42,4 +42,6 @@ int ifLabelContador = 0;
 int switchLabelContador = 0;
 //string if_condition = "";
 
+int contadorIfsToBreak = 0;
+
 #endif

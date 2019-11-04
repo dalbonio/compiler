@@ -18,6 +18,9 @@ struct variavel
 	int tipo;
 	string user_label;
 	string size_label;
+	string start_label;
+	string end_label;
+	string step_label;
 };
 
 struct atributos

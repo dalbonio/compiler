@@ -3,11 +3,20 @@ all:
 		lex -d lexica.l
 		yacc -t -d sintatica.y --verbose
 		g++ -o glf y.tab.c -ll -std=c++11
-		./glf < exemplo.foca 2> y_debug.cpp
+		./glf 1 < exemplo.foca 2> y_debug.cpp
 		@rm lex.yy.c
 		@rm y.tab.c
 		@rm y.tab.h
 		@rm glf
+
+test:
+		clear
+		lex lexica.l
+		yacc -t sintatica.y --verbose
+		g++ -o glf y.tab.c -ll -std=c++11
+		./glf 0 < exemplo.foca > exemplo.c
+		g++ -o exemplo exemplo.c
+		./exemplo
 
 
 #NORMAL COMPILING:

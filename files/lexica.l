@@ -29,8 +29,8 @@ OP_LOG and|or
 
 "input"                     { return TK_INPUT; }
 "print"                     { return TK_PRINT; }
-"loop"		                { return TK_LOOP; }
-"if"		                { return TK_IF; }
+"loop"		                { contadorIfsToBreak = 0; return TK_LOOP; }
+"if"		                { contadorIfsToBreak += 1; return TK_IF; }
 "else"                      { return TK_ELSE; }
 "elif"						{ return TK_ELSEIF; }
 "do"		                { pushContext(); return TK_DO; }
