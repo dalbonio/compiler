@@ -321,6 +321,21 @@ string genCountStrLabelEnd()
 	return str;
 }
 
+string genSliceLabelStart()
+{
+	return string("SliceLabelStart") + to_string(sliceLabelCounter);
+}
+
+string genSliceLabelEnd()
+{
+	return string("SliceLabelEnd") + to_string(sliceLabelCounter);
+}
+
+string genSliceLabelCreate()
+{
+	return string("SliceLabelCreate") + to_string(sliceLabelCounter);
+}
+
 void pushContext()
 {
 	context_stack.push_back(unordered_map<string, string>());
@@ -422,7 +437,7 @@ void set_string_matrix()
 	string command6 = "\tstrcat(new_label, second_label);\n";
 	string command7 = "\tmain_label = new_label;\n";
 	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
-	
+
 	for(int i = EQ; i <= LESS; i++)
 	{
 		string command1 = "\tnew_label = strcmp(first_label, second_label);\n";

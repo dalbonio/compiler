@@ -525,13 +525,19 @@ E 			: '(' E ')'
 					string end = temp_umap[$1.label].end_label;
 					if($3.tipo != ITERATOR)
 					{
-
+						string end_goto_lbl = genSliceLabelEnd();
+						string create_goto_lbl = genSliceLabelCreate();
+						sliceLabelCounter += 1;
 						$$.traducao = $1.traducao + $3.traducao;
-						$$.traducao += "\ttempPos = " + step + " * " + $3.label + ";\n";
-						$$.traducao += "\ttempPos = tempPos + " + start + ";\n";
-						$$.traducao += "\tif(tempPos < 0 ) tempPos = " + size_label + " + " + $3.label + ";\n";
-						$$.traducao += "\telse tempPos = tempPos - 1;\n";
-						$$.traducao += "\tif(tempPos < 0 ) tempPos = " + size_label + " + tempPos;\n";
+						$$.traducao += "\tif( + " + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
+						$$.traducao += "\ttempPos = " + $3.label + " - 1;\n";
+						$$.traducao += "\ttempPos = tempPos * " + step + ";\n";
+						$$.traducao += "\ttempPos = tempPos + " + start + "; goto " + create_goto_lbl + ";\n";
+						$$.traducao += "\t" + end_goto_lbl + ":\n";
+						$$.traducao += "\ttempPos = " + $3.label + " + 1;\n";
+						$$.traducao += "\ttempPos = " + step + " * tempPos;\n";
+						$$.traducao += "\ttempPos = tempPos + " + end + ";\n";
+						$$.traducao += "\t" + create_goto_lbl + ":\n";
 						$$.traducao += "\tif(tempPos < 0 || tempPos >= " + size_label + ") goto OutOfBoundsError;\n";
 						//new $$ type is array $1 associated type.
 						//Ex: if $1 is int array, $$ type is int
@@ -575,7 +581,7 @@ E 			: '(' E ')'
 						$$.traducao += "\t" + start_new + " = " + start_old + "; //start\n";
 						$$.traducao += "\t" + end_new + " = " + end_old + "; //end \n ";
 						$$.traducao += "\t" + label_tamanho_new + " = " + label_tamanho_iter + "; //tamanho\n";
-						$$.traducao += "\t" + $$.label + " = &" + $1.label + "[" + start_new + "]; //referece\n";
+						$$.traducao += "\t" + $$.label + " = " + $1.label + "; //referece\n";
 					}
 				}
 				else

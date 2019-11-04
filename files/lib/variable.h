@@ -36,6 +36,7 @@ int tokenContador = 0;
 int contadorLinha = 1;
 int cmdLabelContador = 0;
 int strLabelCounter = 0;
+int sliceLabelCounter = 0;
 
 //stack <string> labels_if;
 int ifLabelContador = 0;
