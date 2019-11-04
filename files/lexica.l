@@ -39,6 +39,8 @@ OP_LOG and|or
 "switch"					{ return TK_SWITCH; }
 "case"					    { return TK_CASE; }
 "default"					{ return TK_DEFAULT; }
+"global"                    { return TK_GLOBAL; }
+"var"                       { return TK_VAR; }
 
 "++"                        { return TK_INCR; }
 "--"                        { return TK_DECR; }

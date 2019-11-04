@@ -14,9 +14,10 @@ int yylex(void);
 %token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSEIF TK_ELSE
 
 %token TK_CASTING
+%token TK_VAR
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
-%token TK_SWITCH TK_CASE TK_DEFAULT
+%token TK_SWITCH TK_CASE TK_DEFAULT TK_GLOBAL
 
 %start S
 
@@ -27,6 +28,7 @@ int yylex(void);
 %left '+'
 %left '-'
 %left '*' '/'
+%left '[' ']'
 %left '(' ')'
 
 %%
@@ -198,6 +200,10 @@ COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 
 
 COMANDO 	: E
+			{
+				$$.traducao = $1.traducao;
+			}
+			| ATR
 			{
 				$$.traducao = $1.traducao;
 			}
@@ -624,10 +630,10 @@ E 			: '(' E ')'
 				$$.traducao = $1.traducao;
 				$$.label = $1.label;
 			}
-			| ATR
-			{
-				$$.traducao = $1.traducao;
-			}
+			// | ATR
+			// {
+			// 	$$.traducao = $1.traducao;
+			// }
 			| TK_NUM
 			{
 				$$.tipo = $1.tipo;
@@ -673,13 +679,26 @@ E 			: '(' E ')'
 			}
 			| TK_ID
 			{
-				$$.label = get_id_label($1.traducao);
+				$$.label = get_current_context_id_label($1.traducao);
+				//cout << $$.label << endl;
+				$$.tipo = temp_umap[$$.label].tipo;
+				cout << $$.label << $$.tipo;
+				if ($$.tipo == 0)
+				{
+					yyerror("E -> TK_ID\nvariable " + $1.traducao + " not declared");
+				}
+
+				$$.traducao = "";
+			}
+			| TK_GLOBAL TK_ID
+			{
+				$$.label = get_id_label($2.traducao);
 				//cout << $$.label << endl;
 				$$.tipo = temp_umap[$$.label].tipo;
 
 				if ($$.tipo == 0)
 				{
-					yyerror("E -> TK_ID\nvariable " + $1.traducao + " not declared");
+					yyerror("E -> TK_ID\nvariable " + $2.traducao + " not declared");
 				}
 
 				$$.traducao = "";
@@ -773,50 +792,49 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 			;
 
 
-ATR 		: TK_ID '=' E
+ATR 		: TK_VAR TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
-				$1.label = get_current_context_id_label($1.traducao);
-
+				$2.label = get_current_context_id_label($2.traducao);
 				bool hasTamanho = false;
 
-				if($3.tipo == STRING) //add new types with size in if clause, as vectors, matrices
+				if($4.tipo == STRING) //add new types with size in if clause, as vectors, matrices
 				{
 					hasTamanho = true;
-					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
-					temp_umap[$1.label].start_label = temp_umap[$3.label].start_label;
-					temp_umap[$1.label].step_label = temp_umap[$3.label].step_label;
-					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
+					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
+					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
+					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
+					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;
 				}
-				if($3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
+				if($4.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
 				{
-					temp_umap[$1.label].start_label = temp_umap[$3.label].start_label;
-					temp_umap[$1.label].step_label = temp_umap[$3.label].step_label;
-					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
+					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
+					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
+					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;
 				}
 
-				if( temp_umap[$1.label].tipo != 0 && temp_umap[$1.label].tipo != $3.tipo )
+				if( temp_umap[$2.label].tipo != 0 && temp_umap[$2.label].tipo != $4.tipo )
 				{
-					$$.tipo = $3.tipo;
+					$$.tipo = $4.tipo;
 					//criar uma temporaria nova pra guardar o antigo valor
 					if($$.tipo != ITERATOR)
 					{
-						$$.label = add_variable_in_current_context($1.traducao, $$.tipo, hasTamanho);
+						$$.label = add_variable_in_current_context($2.traducao, $$.tipo, hasTamanho);
 					}
 					else
 					{
-						$$.label = add_iterator_in_current_context($1.traducao);
+						$$.label = add_iterator_in_current_context($2.traducao);
 					}
 				}
 				else
 				{
-					$$.tipo = $3.tipo;
+					$$.tipo = $4.tipo;
 					auto& cur_umap = context_stack.back();
-					temp_umap[cur_umap[$1.traducao]].tipo = $3.tipo;
-					$$.label = $1.label;
+					temp_umap[cur_umap[$2.traducao]].tipo = $4.tipo;
+					$$.label = $2.label;
 				}
 
-				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
+				$$.traducao = $4.traducao + "\t" + $$.label + " = " + $4.label + ";\n";
 				//$$.resultado = $1.resultado;
 			};
 

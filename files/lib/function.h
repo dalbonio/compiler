@@ -214,13 +214,24 @@ void umap_label_add_iterator(string& new_label)
 
 string search_variable(string var_name)
 {
-	for(int i = context_stack.size() - 1; i >= 0 ; i--)
+	for(int i = context_stack.size() - 2; i >= 0 ; i--)
 	{
 		auto lbl_umap = context_stack[i];
 		//caso não encontre a variavel no contexto mais proximo, tentar no proximo
 		if(lbl_umap.find(var_name) != lbl_umap.end() )
 			return lbl_umap[var_name];
 	}
+
+	return "0";
+}
+
+string search_variable_cur_ctx(string var_name)
+{
+	int i = context_stack.size() - 1;
+	auto lbl_umap = context_stack[i];
+	//caso não encontre a variavel no contexto, retornar uma label invalida
+	if(lbl_umap.find(var_name) != lbl_umap.end() )
+		return lbl_umap[var_name];
 
 	return "0";
 }
