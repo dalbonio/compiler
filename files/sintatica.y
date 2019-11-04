@@ -527,6 +527,9 @@ E 			: '(' E ')'
 					{
 						string end_goto_lbl = genSliceLabelEnd();
 						string create_goto_lbl = genSliceLabelCreate();
+						string lower_lbl = genSliceLabelLower();
+						string higher_lbl = genSliceLabelHigher();
+						string after_lbl = genAfterSliceLabel();
 						sliceLabelCounter += 1;
 						$$.traducao = $1.traducao + $3.traducao;
 						$$.traducao += "\tif( + " + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
@@ -539,6 +542,12 @@ E 			: '(' E ')'
 						$$.traducao += "\ttempPos = tempPos + " + end + ";\n";
 						$$.traducao += "\t" + create_goto_lbl + ":\n";
 						$$.traducao += "\tif(tempPos < 0 || tempPos >= " + size_label + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\tif(" + start + " < " + end +") goto " + lower_lbl + ";\n";
+						$$.traducao += "\tif(tempPos > " + start + " || tempPos < " + end + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\tgoto " + after_lbl + ";\n";
+						$$.traducao += "\t" + lower_lbl + ":\n";
+						$$.traducao += "\tif(tempPos < " + start + " || tempPos > " + end + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\t" + after_lbl + ":\n";
 						//new $$ type is array $1 associated type.
 						//Ex: if $1 is int array, $$ type is int
 						if($1.tipo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
@@ -559,13 +568,11 @@ E 			: '(' E ')'
 					{
 						$$.tipo = STRING;
 						umap_label_add($$.label, $$.tipo, true);
+						string label_tamanho_arr = temp_umap[$1.label].size_label;
 
-						string label_tamanho_iter = temp_umap[$3.label].size_label;
 						string start_old = temp_umap[$3.label].start_label;
 						string step_old = temp_umap[$3.label].step_label;
 						string end_old = temp_umap[$3.label].end_label;
-
-						string label_tamanho_arr = temp_umap[$1.label].size_label;
 
 						string label_tamanho_new = temp_umap[$$.label].size_label;
 						string start_new = temp_umap[$$.label].start_label;
@@ -580,7 +587,7 @@ E 			: '(' E ')'
 						$$.traducao += "\t" + step_new + " = " + step_old + "; //step\n";
 						$$.traducao += "\t" + start_new + " = " + start_old + "; //start\n";
 						$$.traducao += "\t" + end_new + " = " + end_old + "; //end \n ";
-						$$.traducao += "\t" + label_tamanho_new + " = " + label_tamanho_iter + "; //tamanho\n";
+						$$.traducao += "\t" + label_tamanho_new + " = " + label_tamanho_arr + "; //tamanho\n";
 						$$.traducao += "\t" + $$.label + " = " + $1.label + "; //referece\n";
 					}
 				}
@@ -696,8 +703,9 @@ E 			: '(' E ')'
 				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $5.label + ";\n";
 				$$.traducao += "\tposTemp = " + $1.label + " - " + $3.label + ";\n";
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
-				$$.traducao += "\t" + label_tamanho + " = posTemp / " + $5.label + ";\n";
-				$$.traducao += "\t" + label_tamanho + " = " + label_tamanho + " + 1; //tamanho\n";
+				$$.traducao += "\tposTemp = posTemp / " + $5.label + ";\n";
+				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+				$$.traducao += "\t" + label_tamanho + " = posTemp + 1; //tamanho\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
 				$$.traducao += "\t" + label_end + " = " + label_end + " - 1; //end\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + " - 1; //start\n";

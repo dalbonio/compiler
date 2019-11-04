@@ -336,6 +336,21 @@ string genSliceLabelCreate()
 	return string("SliceLabelCreate") + to_string(sliceLabelCounter);
 }
 
+string genSliceLabelHigher()
+{
+	return string("SliceLabelLower") + to_string(sliceLabelCounter);
+}
+
+string genSliceLabelLower()
+{
+	return string("SliceLabelHigher") + to_string(sliceLabelCounter);
+}
+
+string genAfterSliceLabel()
+{
+	return string("AfterSliceLabel") + to_string(sliceLabelCounter);
+}
+
 void pushContext()
 {
 	context_stack.push_back(unordered_map<string, string>());
