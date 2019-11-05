@@ -32,8 +32,8 @@ void initialize_matrix();
 string string_to_double(string str_label, string double_label);
 string string_to_int(string str_label, string int_label);
 
-string cmd_label_generator(string cmd_name = "CMD");
-string cmd_label_end_generator(string cmd_name = "CMD");
+string cmd_label_generator(string cmd_name = "CMD", int desloc = 0);
+string cmd_label_end_generator(string cmd_name = "CMD", int desloc = 0);
 string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 
 void yyerror( string MSG )
@@ -299,12 +299,26 @@ void initialize_proc_temp_umap()
 	proc_temp_umap["boundaryCheckTemp"] = INT;
 	proc_temp_umap["tempPos"] = INT;
 	proc_temp_umap["posTemp"] = INT;
+	proc_temp_umap["tmp"] = INT;
 	proc_temp_umap["pEndTemp1"] = INT;
 	proc_temp_umap["pEndTemp2"] = INT;
 	proc_temp_umap["pEndTemp3"] = INT;
 
 
 	has_length.insert(pair<int, bool>(STRING, true));
+	has_length.insert(pair<int, bool>(INTARR, true));
+	has_length.insert(pair<int, bool>(DOUBLEARR, true));
+	has_length.insert(pair<int, bool>(STRINGARR, true));
+	has_length.insert(pair<int, bool>(ITERATORARR, true));
+	has_length.insert(pair<int, bool>(BOOLEANARR, true));
+	has_length.insert(pair<int, bool>(ITERATOR, true));
+
+	assoc_type[STRING] = STRING;
+	assoc_type[INTARR] = INT;
+	assoc_type[STRINGARR] = STRING;
+	assoc_type[DOUBLEARR] = DOUBLE;
+	assoc_type[ITERATORARR] = ITERATOR;
+	assoc_type[ITERATOR] = INT;
 }
 
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
@@ -496,49 +510,56 @@ string string_to_int(string str_label, string int_label)
 	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
 }
 
-string cmd_label_generator(string cmd_name)
+string cmd_label_generator(string cmd_name, int desloc)
 {
 	string label_name = cmd_name + string("_");
 
 	if(cmd_name == "IF")
 	{
-		label_name += to_string(ifLabelContador);
+		label_name += to_string(ifLabelContador - desloc);
 	}
 	else if(cmd_name == "SWITCH")
 	{
-		label_name += to_string(switchLabelContador);
+		label_name += to_string(switchLabelContador - desloc);
 	}
 	else if(cmd_name == "STRING")
 	{
-		label_name += to_string(strLabelCounter);
+		label_name += to_string(strLabelCounter - desloc);
 	}
 	else
 	{
-		label_name += to_string(cmdLabelContador);
+		label_name += to_string(cmdLabelContador - desloc);
 	}
 
 	return label_name;
 }
 
-string cmd_label_end_generator(string cmd_name)
+string cmd_label_iter_generator(int desloc)
+{
+	string label_name = string("CMD_ITER_");
+	label_name += to_string(cmdLabelContador - desloc);
+	return label_name;
+}
+
+string cmd_label_end_generator(string cmd_name,  int desloc)
 {
 	string label_end_name = cmd_name + string("_END_");
 
 	if(cmd_name == "IF")
 	{
-		label_end_name += to_string(ifLabelContador);
+		label_end_name += to_string(ifLabelContador - desloc);
 	}
 	else if(cmd_name == "SWITCH")
 	{
-		label_end_name += to_string(switchLabelContador);
+		label_end_name += to_string(switchLabelContador - desloc);
 	}
 	else if(cmd_name == "STRING")
 	{
-		label_end_name += to_string(strLabelCounter);
+		label_end_name += to_string(strLabelCounter - desloc);
 	}
 	else
 	{
-		label_end_name += to_string(cmdLabelContador);
+		label_end_name += to_string(cmdLabelContador - desloc);
 	}
 
 	return label_end_name;

@@ -24,10 +24,11 @@ unordered_map<string, int> proc_temp_umap;
 queue <string> multiple_atr_queue;
 stack <pair<string, int>> multiple_atr_stack;
 
+//this maps have the purpose of associating arrays with their respective value types,
+unordered_map<int, bool> assoc_type;
 //this maps have the purpose of making syntax check on types easier,
 //like checking if certain type has length attribute, they work as a hash table
 //the value in key-value pair has no actual use. All itens in these maps are
-//inserted right here. This avoids "$1.type == STRING || $1.type == INT" f.i
 unordered_map<int, bool> has_length;
 
 string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
