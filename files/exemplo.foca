@@ -1,7 +1,2 @@
-var a = "magic"
-switch(a) do
-    case "magic", "mage", "wizard", "witch":
-        print("it is magic")
-    default:
-        print("it is not magic")
-end
+var a = "1.2"
+var b = (double) a

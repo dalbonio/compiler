@@ -511,6 +511,16 @@ string string_to_int(string str_label, string int_label)
 	return string("\tsscanf(") + str_label + string(", \"%d\", &") + int_label + string(");\n");
 }
 
+string double_to_string(string double_label, string str_label)
+{
+	return string("\tsprintf( ") + str_label + ", \"%lf\", " + double_label + ");\n";
+}
+
+string int_to_double(string int_label, string str_label)
+{
+	return string("\tsprintf( ") + str_label + ", \"%d\", " + int_label + ");\n";
+}
+
 string cmd_label_generator(string cmd_name, int desloc)
 {
 	string label_name = cmd_name + string("_");
