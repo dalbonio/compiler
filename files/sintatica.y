@@ -428,6 +428,7 @@ E 			: '(' E ')'
 				temp_umap[$$.label] = v; //useless
 
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + $2.label + ";\n";
+
 				//$$.resultado = $2.resultado;
 
 			}
@@ -934,6 +935,78 @@ CONT		: TK_ID TK_CONT E
 				{
 					$$.traducao += "\t" + $1.label + " = " + $1.label + " " + $2.traducao[0] + " " + $3.label + ";\n";
 				}
+			}
+			| E TK_INCR
+			{
+				string new_label;
+				string value;
+
+				if($1.tipo != INT)
+				{
+					yyerror("CONT -> E TK_INCR\n");
+				}
+
+				umap_label_add(new_label, INT);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				$$.traducao = $1.traducao;
+				$$.traducao += "\t" + new_label + " = 1" + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " + " + new_label + ";\n";
+			}
+			| E TK_DECR
+			{
+				string new_label;
+				string value;
+
+				if($1.tipo != INT)
+				{
+					yyerror("CONT -> E TK_INCR\n");
+				}
+
+				umap_label_add(new_label, INT);
+				$$.tipo = $1.tipo;
+				$$.label = $1.label;
+
+				$$.traducao = $1.traducao;
+				$$.traducao += "\t" + new_label + " = 1" + ";\n";
+				$$.traducao += "\t" + $1.label + " = " + $1.label + " - " + new_label + ";\n";
+			}
+			| TK_INCR E
+			{
+				string new_label;
+				string value;
+
+				if($2.tipo != INT)
+				{
+					yyerror("CONT -> E TK_INCR\n");
+				}
+
+				umap_label_add(new_label, INT);
+				$$.tipo = $2.tipo;
+				$$.label = $2.label;
+
+				$$.traducao = "\t" + new_label + " = 1" + ";\n";
+				$$.traducao += "\t" + $2.label + " = " + $2.label + " + " + new_label + ";\n";
+				$$.traducao += $2.traducao;
+			}
+			| TK_DECR E
+			{
+				string new_label;
+				string value;
+
+				if($2.tipo != INT)
+				{
+					yyerror("CONT -> E TK_INCR\n");
+				}
+
+				umap_label_add(new_label, INT);
+				$$.tipo = $2.tipo;
+				$$.label = $2.label;
+
+				$$.traducao = "\t" + new_label + " = 1" + ";\n";
+				$$.traducao += "\t" + $2.label + " = " + $2.label + " - " + new_label + ";\n";
+				$$.traducao += $2.traducao;
 			};
 
 
