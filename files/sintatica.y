@@ -113,7 +113,8 @@ BL_ELSE		: TK_ELSEIF '(' E ')' BL_IF
 				$$.traducao = "\n";
 			};
 
-REC_NUM:	TK_NUM ',' REC_NUM
+
+REC_NUM		:TK_NUM ',' REC_NUM
 			{
 				string case_label;
 				string new_label;
@@ -142,11 +143,60 @@ REC_NUM:	TK_NUM ',' REC_NUM
 				$$.label = case_label;
 			};
 
+REC_STR		:TK_STR ',' REC_STR
+			{
+				string case_label;
+				string new_label;
 
-BL_CASE:    TK_CASE REC_NUM COMANDOS BL_CASE
+				umap_label_add($1.label, $1.tipo);
+				umap_label_add(case_label, BOOLEAN);
+				umap_label_add(new_label, BOOLEAN);
+
+				$$.traducao = "\t" + $1.label + " = " + $1.traducao + ";\n";
+				$$.traducao += "\t" + case_label + " = " + "strcmp(VAR_LABEL, " + $1.label + ");\n";
+				$$.traducao += "\t" + case_label + " = " + "0 == " + case_label + ";\n";
+				$$.traducao += $3.traducao;
+				$$.traducao += "\t" + new_label + " = " + case_label + " || " + $3.label + ";\n";
+
+				$$.label = new_label;
+			}
+			| TK_STR ':'
+			{
+				string case_label;
+
+				umap_label_add($1.label, $1.tipo);
+				umap_label_add(case_label, BOOLEAN);
+
+				$$.traducao = "\t" + $1.label + " = " + $1.traducao + ";\n";
+				$$.traducao += "\t" + case_label + " = " + "strcmp(VAR_LABEL, " + $1.label + ");\n";
+				$$.traducao += "\t" + case_label + " = " + "0 == " + case_label + ";\n";
+
+				$$.label = case_label;
+			};
+
+
+BL_CASE_INT	: TK_CASE REC_NUM COMANDOS BL_CASE_INT
 			{
 				//\n/**/\n
 				$$.traducao = $2.traducao;
+				$$.traducao += "\n/**/\n\tif(" + $2.label + ") goto " + cmd_label_generator("SWITCH") + ";\n";
+				$$.traducao += "\tgoto " + cmd_label_end_generator("SWITCH") + ";\n";
+				$$.traducao += "\n/**/\n\t" + cmd_label_generator("SWITCH") + ":\n";
+				$$.traducao += $3.traducao;
+				$$.traducao += "\t" + cmd_label_end_generator("SWITCH") + ":\n\n/**/\n";
+				$$.traducao += $4.traducao;
+				switchLabelContador++;
+			}
+			| BL_DEFAULT
+			{
+				$$.traducao = $1.traducao;
+			};
+
+BL_CASE_STR	: TK_CASE REC_STR COMANDOS BL_CASE_STR
+			{
+				//\n/**/\n
+				$$.traducao = $2.traducao;
+				//$$.traducao += "\t" + $2.label + " = !" + $2.label + ";\n";
 				$$.traducao += "\n/**/\n\tif(" + $2.label + ") goto " + cmd_label_generator("SWITCH") + ";\n";
 				$$.traducao += "\tgoto " + cmd_label_end_generator("SWITCH") + ";\n";
 				$$.traducao += "\n/**/\n\t" + cmd_label_generator("SWITCH") + ":\n";
@@ -171,10 +221,14 @@ BL_DEFAULT: TK_DEFAULT ':' COMANDOS BL_END
 			};
 
 
-BL_SWITCH:	TK_DO TK_FIM_LINHA BL_CASE
+BL_SWITCH	: TK_DO TK_FIM_LINHA BL_CASE_INT
 			{
 				$$.traducao = $3.traducao;
-			};
+			}
+			| TK_DO TK_FIM_LINHA BL_CASE_STR
+			{
+				$$.traducao = $3.traducao;
+			} ;
 
 
 COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
@@ -231,12 +285,12 @@ COMANDO 	: E
 
 			| TK_SWITCH '(' TK_ID ')' BL_SWITCH
 			{
-				if( $3.tipo != INT )//POR ENQUANTO
+				if( $3.tipo != INT && $3.tipo != STRING )
 				{
 					yyerror("COMANDO -> TK_SWITCH '(' TK_ID ')' BL_SWITCH\n" + string("Tipo ") + " invalido para comando SWITCH.");
 				}
 
-				string label = search_variable($3.traducao);
+				string label = search_variable_cur_ctx($3.traducao);//talvez usar search variable
 
 				if(label == "0")
 				{
@@ -723,7 +777,7 @@ E 			: '(' E ')'
 				$$.label = get_current_context_id_label($1.traducao);
 				//cout << $$.label << endl;
 				$$.tipo = temp_umap[$$.label].tipo;
-				cout << $$.label << $$.tipo;
+				//cout << $$.label << $$.tipo;
 				if ($$.tipo == 0)
 				{
 					yyerror("E -> TK_ID\nvariable " + $1.traducao + " not declared");
@@ -888,7 +942,7 @@ COND 		: E TK_OP_REL E
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = $1.traducao + $3.traducao;
 				$$.traducao += types_operations($$, $1, $2, $3, BOOLEAN);
-				cout << $$.traducao;
+				//cout << $$.traducao;
 				//$$.resultado = 0;
 
 			}
