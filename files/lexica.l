@@ -29,8 +29,9 @@ OP_LOG and|or
 
 "input"                     { return TK_INPUT; }
 "print"                     { return TK_PRINT; }
-"loop"		                { contadorIfsToBreak = 0; return TK_LOOP; }
-"if"		                { contadorIfsToBreak += 1; return TK_IF; }
+"loop"		                { cmdLabelContador++; return TK_LOOP; }
+"loopeach"		            { return TK_LOOPEACH; }
+"if"		                { return TK_IF; }
 "else"                      { return TK_ELSE; }
 "elif"						{ return TK_ELSEIF; }
 "do"		                { pushContext(); return TK_DO; }
@@ -39,8 +40,11 @@ OP_LOG and|or
 "switch"					{ return TK_SWITCH; }
 "case"					    { return TK_CASE; }
 "default"					{ return TK_DEFAULT; }
+"in"					    { return TK_IN; }
 "global"                    { return TK_GLOBAL; }
 "var"                       { return TK_VAR; }
+"break"                     { return TK_BREAK; }
+"continue"                  { return TK_CONTINUE; }
 
 "++"                        { return TK_INCR; }
 "--"                        { return TK_DECR; }

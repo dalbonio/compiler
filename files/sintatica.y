@@ -12,12 +12,12 @@ int yylex(void);
 %token TK_OP_ARIT TK_OP_REL TK_OP_LOG TK_DECR TK_INCR TK_CONT
 
 %token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSEIF TK_ELSE
-
+%token TK_BREAK TK_CONTINUE
 %token TK_CASTING
 %token TK_VAR
 %token TK_FIM TK_ERROR
 %token TK_FIM_LINHA
-%token TK_SWITCH TK_CASE TK_DEFAULT TK_GLOBAL
+%token TK_SWITCH TK_CASE TK_DEFAULT TK_GLOBAL TK_LOOPEACH TK_IN
 
 %start S
 
@@ -207,6 +207,16 @@ COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
 			}
+			| TK_BREAK
+			{
+				string goto_label = cmd_label_end_generator();
+				$$.traducao = string("\tgoto ") + goto_label + ";\n";
+			}
+			| TK_CONTINUE
+			{
+				string goto_label = cmd_label_generator();
+				$$.traducao = string("\tgoto ") + goto_label + ";\n";
+			}
 			| TK_PRINT '(' E ')'
 			{
 				if( $3.tipo == BOOLEAN )
@@ -289,20 +299,50 @@ COMANDO 	: E
 				}
 
 				string new_label;
-				string cmd_label[2] = {cmd_label_generator(), cmd_label_end_generator()};
+				string cmd_label[3] = {cmd_label_generator(), cmd_label_end_generator(), cmd_label_iter_generator()};
 				cmdLabelContador++;
 
 				umap_label_add(new_label, BOOLEAN);
 
 				$$.traducao = $3.traducao;
-				$$.traducao += "\n\t" + cmd_label[0] + ":\n";
+				$$.traducao += "\n\t" + cmd_label[2] + ":\n";
 				$$.traducao += $5.traducao;
 				$$.traducao += "\t" + new_label + " = !(" + $5.label + ");\n";
 				$$.traducao += "\tif(" + new_label + ") " + "goto " + cmd_label[1] + ";\n";
 				$$.traducao += $9.traducao;
+				$$.traducao += "\n\t" + cmd_label[0] + ":\n";
 				$$.traducao += $7.traducao;
-				$$.traducao += "\tgoto " + cmd_label[0] + ";\n";
+				$$.traducao += "\tgoto " + cmd_label[2] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
+			}
+			| TK_LOOPEACH '(' TK_VAR TK_ID TK_IN E ')' BLOCO //fase de testes nao mudar nada
+			{
+				if(has_length.find($6.tipo) == has_length.end())
+				{
+					yyerror("COMANDO -> TK_LOOPEACH (E) BLOCO//for\nelement doesnt have iterator implemented.\n");
+				}
+
+				string size_label = temp_umap[$6.label].size_label;
+				string start = temp_umap[$6.label].start_label;
+				string step = temp_umap[$6.label].step_label;
+				string end = temp_umap[$6.label].end_label;
+
+				string new_label;
+				string cmd_label[3] = {cmd_label_generator(), cmd_label_end_generator(), cmd_label_iter_generator()};
+				//cmdLabelContador++;
+
+				// $$.traducao += "\n\t" + ref_index + " = " + start + " //ref index start foreach;\n";
+				// $$.traducao += "\n\t" + $4.label + " = " + $6.label + "[" + ref_index + "]; //ref label start foreach\n";
+				// $$.traducao += "\t" + cmd_label[0] + ":\n";
+				// $$.traducao += "\ttmp = " + ref_index + " == " + end + ";\n";
+				// $$.traducao += "\ttmp = !(tmp);\n";
+				// $$.traducao += "\tif(tmp) goto " + cmd_label[1] + ";\n";
+				// $$.traducao += $8.traducao;
+				// $$.traducao += "\t" + cmd_label[2] + ":\n";
+				// $$.traducao += "\t" + ref_index + " = " + ref_index + " + " + step + " //ref label iter foreach;\n";
+				// $$.traducao += "\n\t" + $4.label + " = " + $6.label + "[" + ref_index + "]; //ref label iter foreach\n";
+				// $$.traducao += "\tgoto " + cmd_label[0] + ";\n";
+				// $$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
 			| TK_IF '(' E ')' BL_IF
 			{
@@ -539,7 +579,7 @@ E 			: '(' E ')'
 						sliceLabelCounter += 1;
 						$$.traducao = $1.traducao + $3.traducao;
 						$$.traducao += "\tif( + " + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
-						$$.traducao += "\ttempPos = " + $3.label + " - 1;\n";
+						$$.traducao += "\ttempPos = " + $3.label + ";\n";
 						$$.traducao += "\ttempPos = tempPos * " + step + ";\n";
 						$$.traducao += "\ttempPos = tempPos + " + start + "; goto " + create_goto_lbl + ";\n";
 						$$.traducao += "\t" + end_goto_lbl + ":\n";
@@ -726,8 +766,8 @@ E 			: '(' E ')'
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
 				$$.traducao += "\t" + label_tamanho + " = posTemp + 1; //tamanho\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
-				$$.traducao += "\t" + label_end + " = " + label_end + " - 1; //end\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + " - 1; //start\n";
+				$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
 				$$.traducao += "\t" + label_step + " = " + $5.label + "; //step\n";
 				$$.traducao += "\t" + $$.label + " = -1;\n";
 			}
@@ -808,6 +848,8 @@ ATR 		: TK_VAR TK_ID '=' E
 				}
 				if($4.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
 				{
+					hasTamanho = true;
+					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
 					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
 					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
 					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;

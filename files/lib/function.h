@@ -34,6 +34,7 @@ string string_to_int(string str_label, string int_label);
 
 string cmd_label_generator(string cmd_name = "CMD", int desloc = 0);
 string cmd_label_end_generator(string cmd_name = "CMD", int desloc = 0);
+string cmd_label_iter_generator(int desloc = 0);
 string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
 
 void yyerror( string MSG )
@@ -306,12 +307,12 @@ void initialize_proc_temp_umap()
 
 
 	has_length.insert(pair<int, bool>(STRING, true));
+	has_length.insert(pair<int, bool>(ITERATOR, true));
 	has_length.insert(pair<int, bool>(INTARR, true));
 	has_length.insert(pair<int, bool>(DOUBLEARR, true));
 	has_length.insert(pair<int, bool>(STRINGARR, true));
 	has_length.insert(pair<int, bool>(ITERATORARR, true));
 	has_length.insert(pair<int, bool>(BOOLEANARR, true));
-	has_length.insert(pair<int, bool>(ITERATOR, true));
 
 	assoc_type[STRING] = STRING;
 	assoc_type[INTARR] = INT;
@@ -547,19 +548,19 @@ string cmd_label_end_generator(string cmd_name,  int desloc)
 
 	if(cmd_name == "IF")
 	{
-		label_end_name += to_string(ifLabelContador - desloc);
+		label_end_name += to_string(ifLabelContador + desloc);
 	}
 	else if(cmd_name == "SWITCH")
 	{
-		label_end_name += to_string(switchLabelContador - desloc);
+		label_end_name += to_string(switchLabelContador + desloc);
 	}
 	else if(cmd_name == "STRING")
 	{
-		label_end_name += to_string(strLabelCounter - desloc);
+		label_end_name += to_string(strLabelCounter + desloc);
 	}
 	else
 	{
-		label_end_name += to_string(cmdLabelContador - desloc);
+		label_end_name += to_string(cmdLabelContador + desloc);
 	}
 
 	return label_end_name;
