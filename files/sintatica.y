@@ -261,6 +261,10 @@ COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
 			}
+			| DCLR
+			{
+
+			}
 			| TK_BREAK
 			{
 				string goto_label = cmd_label_end_generator();
@@ -887,51 +891,97 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 			;
 
 
-ATR 		: TK_VAR TK_ID '=' E
+ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
-				$2.label = get_current_context_id_label($2.traducao);
+				$1.label = get_current_context_id_label($1.traducao);
 				bool hasTamanho = false;
 
-				if($4.tipo == STRING) //add new types with size in if clause, as vectors, matrices
+				if($3.tipo == STRING || $3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
 				{
 					hasTamanho = true;
-					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
-					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
-					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
-					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;
-				}
-				if($4.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
-				{
-					hasTamanho = true;
-					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
-					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
-					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
-					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;
+					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
+					temp_umap[$1.label].start_label = temp_umap[$3.label].start_label;
+					temp_umap[$1.label].step_label = temp_umap[$3.label].step_label;
+					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
 				}
 
-				if( temp_umap[$2.label].tipo != 0 && temp_umap[$2.label].tipo != $4.tipo )
-				{
-					$$.tipo = $4.tipo;
+				if( temp_umap[$1.label].tipo != 0
+					&& temp_umap[$1.label].tipo != $3.tipo
+					&& temp_umap[$1.label].fixed == 0){
+
+					$$.tipo = $3.tipo;
 					//criar uma temporaria nova pra guardar o antigo valor
 					if($$.tipo != ITERATOR)
 					{
-						$$.label = add_variable_in_current_context($2.traducao, $$.tipo, hasTamanho);
+						$$.label = add_variable_in_current_context($1.traducao, $$.tipo, hasTamanho);
 					}
 					else
 					{
-						$$.label = add_iterator_in_current_context($2.traducao);
+						$$.label = add_iterator_in_current_context($1.traducao);
 					}
+				}
+				else if(temp_umap[$1.label].fixed == 1)
+				{
+					//conversao implicita
 				}
 				else
 				{
-					$$.tipo = $4.tipo;
+					$$.tipo = $3.tipo;
 					auto& cur_umap = context_stack.back();
-					temp_umap[cur_umap[$2.traducao]].tipo = $4.tipo;
-					$$.label = $2.label;
+					temp_umap[cur_umap[$1.traducao]].tipo = $3.tipo;
+					$$.label = $1.label;
 				}
 
-				$$.traducao = $4.traducao + "\t" + $$.label + " = " + $4.label + ";\n";
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
+				//$$.resultado = $1.resultado;
+			};
+
+DCLR		: TK_CASTING TK_ID
+			{
+				$2.label = get_current_context_id_label($2.traducao, 1);
+				int tipo = tipo_umap_str[$1.label];
+				if(temp_umap[$2.label].tipo != 0)
+				{
+					yyerror($2.traducao + "ja declarada");
+				}
+
+				temp_umap[$2.label].tipo = tipo;
+				string default_value = default_value_map[tipo];
+
+				$$.traducao = "";
+			}
+			| TK_CASTING TK_ID '=' E
+			{
+				$2.label = get_current_context_id_label($2.traducao, 1);
+				int tipo = tipo_umap_str[$1.label];
+				if(temp_umap[$2.label].tipo != 0)
+				{
+					yyerror($2.traducao + "ja declarada");
+				}
+				temp_umap[$2.label].tipo = tipo;
+
+				//caso a expressao seja de valor diferente da variavel, tentar conversao implicita
+				if( temp_umap[$2.label].tipo != $4.tipo )
+				{
+					//check if conversion is possible
+
+					//in case converion was success
+				}
+
+				bool hasTamanho = false;
+				if(tipo == STRING || tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
+				{
+					hasTamanho = true;
+					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
+					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
+					temp_umap[$2.label].step_label = temp_umap[$4.label].step_label;
+					temp_umap[$2.label].end_label = temp_umap[$4.label].end_label;
+				}
+				add_variable_in_current_context($2.traducao, tipo, hasTamanho);
+
+				//$$.traducao = conversao(antes da linha abaixo)
+				$$.traducao = $4.traducao + "\t" + $2.label + " = " + $4.label + ";\n";
 				//$$.resultado = $1.resultado;
 			};
 

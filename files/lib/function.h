@@ -15,7 +15,7 @@ void replace_all(std::string& data, std::string toSearch, std::string replaceStr
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void umap_label_add_iterator(string& new_label);
 string search_variable(string var_name);
-string get_current_context_id_label(string user_label);
+string get_current_context_id_label(string user_label, int fixed = 0);
 string get_id_label(string user_label);
 string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false);
 void initialize_proc_temp_umap();
@@ -103,6 +103,10 @@ void initialize_tipo_umap()
 	tipo_umap_str["boolean"] = BOOLEAN;
 	tipo_umap_str["double"] = DOUBLE;
 	tipo_umap_str["iterator"] = ITERATOR;
+
+	default_value_map[INT] = "0";
+	default_value_map[DOUBLE] = "0.0";
+	default_value_map[STRING] = "\"\\0\"";
 }
 
 void initialize_op_umap()
@@ -237,7 +241,7 @@ string search_variable_cur_ctx(string var_name)
 	return "0";
 }
 
-string get_current_context_id_label(string user_label)
+string get_current_context_id_label(string user_label, int fixed)
 {
 	auto& lbl_umap = context_stack.back();
 	if(lbl_umap.find(user_label) == lbl_umap.end() )
@@ -246,6 +250,7 @@ string get_current_context_id_label(string user_label)
 		variavel new_var;
 		new_var.user_label = user_label;
 		new_var.tipo = 0;
+		new_var.fixed = fixed;
 
 		lbl_umap[user_label] = new_label;
 		temp_umap[new_label] = new_var;

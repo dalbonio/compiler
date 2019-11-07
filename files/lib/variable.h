@@ -24,6 +24,8 @@ unordered_map<string, int> proc_temp_umap;
 queue <string> multiple_atr_queue;
 stack <pair<string, int>> multiple_atr_stack;
 
+unordered_map<int, string> default_value_map;
+
 //this maps have the purpose of associating arrays with their respective value types,
 unordered_map<int, bool> assoc_type;
 //this maps have the purpose of making syntax check on types easier,

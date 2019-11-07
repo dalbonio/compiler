@@ -16,6 +16,7 @@ using namespace std;
 struct variavel
 {
 	int tipo;
+	int fixed;
 	string user_label;
 	string size_label;
 	string start_label;
