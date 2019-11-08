@@ -536,7 +536,7 @@ E 			: '(' E ')'
 				if($3.label == "string")
 				{
 					$$.tipo = STRING;
-
+					//adicionar features de step, start e end
 					umap_label_add($$.label, STRING, true);
 					string label_tamanho = temp_umap[$$.label].size_label;
 
@@ -637,7 +637,7 @@ E 			: '(' E ')'
 						string after_lbl = genAfterSliceLabel();
 						sliceLabelCounter += 1;
 						$$.traducao = $1.traducao + $3.traducao;
-						$$.traducao += "\tif( + " + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
+						$$.traducao += "\tif(" + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
 						$$.traducao += "\ttempPos = " + $3.label + ";\n";
 						$$.traducao += "\ttempPos = tempPos * " + step + ";\n";
 						$$.traducao += "\ttempPos = tempPos + " + start + "; goto " + create_goto_lbl + ";\n";
@@ -667,6 +667,33 @@ E 			: '(' E ')'
 							$$.traducao += "\t" + end + " = 2; //end\n";
 							$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
 							$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[tempPos];" + $1.label + "[1] = \'\\0\';\n";
+						}
+						else
+						{
+							if(temp_umap[$1.label].ptrs > 1)
+							{
+								$$.tipo == ARRAY;
+								int ptrs = temp_umap[$1.label].ptrs - 1;
+								int pointsTo = temp_umap[$1.label].pointsTo;
+								umap_label_add_array($$.label, pointsTo, ptrs);
+
+								string tamanho_lbl = temp_umap[$$.label].size_label;
+								string start_lbl = temp_umap[$$.label].start_label;
+								string end_lbl = temp_umap[$$.label].end_label;
+								string step_lbl = temp_umap[$$.label].step_label;
+
+								$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
+								$$.traducao += "\t" + step_lbl + " = " + step + "; //step\n";
+								$$.traducao += "\t" + start_lbl + " = " + start + "; //start\n";
+								$$.traducao += "\t" + end_lbl + " = " + end + "; //end\n";
+								$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+							}
+							else
+							{
+								int pointsTo = temp_umap[$1.label].pointsTo;
+								umap_label_add($$.label, pointsTo, false);
+								$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+							}
 						}
 					}
 					else
@@ -764,6 +791,8 @@ E 			: '(' E ')'
 
 				umap_label_add($$.label, $$.tipo, true);
 				//cout << "label: " << $$.label << endl;
+				temp_umap[$$.label].ptrs = 1;
+				temp_umap[$$.label].pointsTo = STRING;
 				string label_tamanho = temp_umap[$$.label].size_label;
 				string start = temp_umap[$$.label].start_label;
 				string end = temp_umap[$$.label].end_label;
@@ -852,13 +881,45 @@ E 			: '(' E ')'
 				$$.traducao += "\t" + label_tamanho + " = tempPos + 1; //tamanho\n";
 				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n";
 			}
+			| '[' {} ARR_REC
+			{
+
+			}
 			| '<' TK_CASTING '>' '[' E ']'
 			{
 				if($5.tipo != INT)
 					yyerror("only int available to array size");
 
 				int arr_tipo = tipo_umap_str[$2.label];
+				if(arr_tipo)
+				$$.tipo = ARRAY;
+				int pointers = 1;
+				if(arr_tipo == STRING)
+				{
+					pointers = 2;
+				}
+				umap_label_add_array($$.label, arr_tipo, pointers);
 
+				string label_start = temp_umap[$$.label].start_label;
+				string label_end = temp_umap[$$.label].end_label;
+				string label_step = temp_umap[$$.label].step_label;
+				string label_tamanho = temp_umap[$$.label].size_label;
+
+				$$.traducao = $5.traducao;
+				$$.traducao += "\tif(" + $5.label + " <= 0) goto OutOfBoundsError;\n";
+				$$.traducao += "\t" + label_tamanho + " = " + $5.label + "; //tamanho\n";
+				$$.traducao += "\t" + label_end + " = " + $5.label + " - 1; //end\n";
+				$$.traducao += "\t" + label_start + " = 0; //start\n";
+				$$.traducao += "\t" + label_step + " = 1; //step\n";
+				$$.traducao += "\t" + $$.label + " = (" + get_tipo(arr_tipo, pointers) +  ") malloc(sizeof(" + get_tipo(arr_tipo, pointers - 1) + ") * " + $5.label + "); //alocando memoria\n";
+			}
+			| '<' TK_CASTING ',' E '>' '[' E ']'
+			{
+				if($5.tipo != INT)
+					yyerror("only int available to array size");
+
+				int arr_tipo = tipo_umap_str[$2.label];
+				if(arr_tipo)
 				$$.tipo = ARRAY;
 				umap_label_add_array($$.label, arr_tipo, 1);
 
@@ -873,7 +934,7 @@ E 			: '(' E ')'
 				$$.traducao += "\t" + label_end + " = " + $5.label + " - 1; //end\n";
 				$$.traducao += "\t" + label_start + " = 0; //start\n";
 				$$.traducao += "\t" + label_step + " = 1; //step\n";
-				$$.traducao += "\t" + $$.label + " = malloc(sizeof(" + get_tipo(arr_tipo, 1) + ") * " + $5.label + ")); //alocando memoria\n";
+				$$.traducao += "\t" + $$.label + " = (" + get_tipo(arr_tipo, 1) +  ") malloc(sizeof(" + get_tipo(arr_tipo, 0) + ") * " + $5.label + "); //alocando memoria\n";
 			}
 			;
 
@@ -922,7 +983,7 @@ ATR 		: TK_ID '=' E
 				$1.label = get_current_context_id_label($1.traducao, 0, ptrs, pointsTo);
 				bool hasTamanho = false;
 
-				if($3.tipo == STRING || $3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
+				if($3.tipo == STRING || $3.tipo == ITERATOR || $3.tipo == ARRAY) //add new types with size in if clause, as vectors, matrices
 				{
 					hasTamanho = true;
 					temp_umap[$1.label].size_label = temp_umap[$3.label].size_label;
@@ -960,6 +1021,64 @@ ATR 		: TK_ID '=' E
 
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n";
 				//$$.resultado = $1.resultado;
+			}
+			| TK_ID '[' E ']' '=' E
+			{
+				string user_label = $1.traducao;
+				auto& lbl_umap = context_stack.back();
+				if(lbl_umap.find(user_label) == lbl_umap.end() )
+					yyerror($1.label + "not declared");
+
+				if($3.tipo != INT)
+					yyerror("integer expected in array set index operation");
+
+				$1.label = lbl_umap[user_label];
+				$1.tipo = temp_umap[$1.label].tipo;
+				int ptrs = temp_umap[$1.label].ptrs;
+				int pointsTo = temp_umap[$1.label].pointsTo;
+				bool hasTamanho = false;
+
+				if(has_length.find($1.tipo) == has_length.end())
+					yyerror($1.label + "has not length attribute");
+
+				//in case id has length and is declared, check if types are matching
+				if(pointsTo == temp_umap[$6.label].tipo)
+				{
+					if(!(ptrs == temp_umap[$6.label].ptrs + 1))
+						yyerror( tipo_umap[pointsTo] + "is expected");
+				}
+
+				//if all good, calculate position
+				string size_label = temp_umap[$1.label].size_label;
+				string start = temp_umap[$1.label].start_label;
+				string step = temp_umap[$1.label].step_label;
+				string end = temp_umap[$1.label].end_label;
+
+				string end_goto_lbl = genSliceLabelEnd();
+				string create_goto_lbl = genSliceLabelCreate();
+				string lower_lbl = genSliceLabelLower();
+				string higher_lbl = genSliceLabelHigher();
+				string after_lbl = genAfterSliceLabel();
+				sliceLabelCounter += 1;
+				$$.traducao = $3.traducao + $6.traducao;
+				$$.traducao += "\tif(" + $3.label + " < 0 ) goto " + end_goto_lbl + ";\n";
+				$$.traducao += "\ttempPos = " + $3.label + ";\n";
+				$$.traducao += "\ttempPos = tempPos * " + step + ";\n";
+				$$.traducao += "\ttempPos = tempPos + " + start + "; goto " + create_goto_lbl + ";\n";
+				$$.traducao += "\t" + end_goto_lbl + ":\n";
+				$$.traducao += "\ttempPos = " + $3.label + " + 1;\n";
+				$$.traducao += "\ttempPos = " + step + " * tempPos;\n";
+				$$.traducao += "\ttempPos = tempPos + " + end + ";\n";
+				$$.traducao += "\t" + create_goto_lbl + ":\n";
+				$$.traducao += "\tif(tempPos < 0 || tempPos >= " + size_label + ") goto OutOfBoundsError;\n";
+				$$.traducao += "\tif(" + start + " < " + end +") goto " + lower_lbl + ";\n";
+				$$.traducao += "\tif(tempPos > " + start + " || tempPos < " + end + ") goto OutOfBoundsError;\n";
+				$$.traducao += "\tgoto " + after_lbl + ";\n";
+				$$.traducao += "\t" + lower_lbl + ":\n";
+				$$.traducao += "\tif(tempPos < " + start + " || tempPos > " + end + ") goto OutOfBoundsError;\n";
+				$$.traducao += "\t" + after_lbl + ":\n";
+				//after calculating position in tempPos, attempt to insert new item in array
+				$$.traducao += "\t" + $1.label + "[tempPos] = " + $6.label + "; //inserting in position\n";
 			};
 
 DCLR		: TK_CASTING TK_ID
@@ -1041,6 +1160,17 @@ COND 		: E TK_OP_REL E
 				$$.traducao = $2.traducao + "\t" + $$.label + " = " + "!" + "(" + $2.label + ");\n";
 			}
 			;
+
+ARR_REC		: E ','
+			{
+
+			}
+			| E ']'
+			{
+				$$.label = $1.label;
+				$$.tipo = $1.tipo;
+				$$.traducao = $1.traducao;
+			}
 
 
 CONT		: TK_ID TK_CONT E

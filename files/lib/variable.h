@@ -33,6 +33,8 @@ unordered_map<int, bool> assoc_type;
 //the value in key-value pair has no actual use. All itens in these maps are
 unordered_map<int, bool> has_length;
 
+vector<vector<string>> array_lbl_vector;
+
 string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 
 int tokenContador = 0;

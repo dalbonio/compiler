@@ -104,7 +104,7 @@ string declare_variables()
 void initialize_tipo_umap()
 {
 	tipo_umap[INT] = "int";
-	tipo_umap[STRING] = "char*";
+	tipo_umap[STRING] = "char";
 	tipo_umap[BOOLEAN] = "int";
 	tipo_umap[DOUBLE] = "double";
 	tipo_umap[ITERATOR] = "int";
