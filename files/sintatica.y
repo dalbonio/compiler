@@ -825,7 +825,7 @@ E 			: '(' E ')'
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
 				$$.traducao += "\t" + label_tamanho + " = posTemp + 1; //tamanho\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
-				$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
+				//$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
 				$$.traducao += "\t" + label_step + " = " + $5.label + "; //step\n";
 				$$.traducao += "\t" + $$.label + " = -1;\n";
@@ -844,13 +844,36 @@ E 			: '(' E ')'
 				string label_tamanho = temp_umap[$$.label].size_label;
 
 				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += "\t" + label_end + " = " + $3.label + " - 1; //end\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + " - 1; //start\n";
+				$$.traducao += "\t" + label_end + " = " + $3.label + "; //end\n";
+				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
 				$$.traducao += "\t" + label_step + " = 1; //step\n";
 				$$.traducao += "\ttempPos = " + label_start + " - " + label_end + ";\n";
 				$$.traducao += "\tif(tempPos < 0) tempPos = tempPos * -1;\n";
 				$$.traducao += "\t" + label_tamanho + " = tempPos + 1; //tamanho\n";
 				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n";
+			}
+			| '<' TK_CASTING '>' '[' E ']'
+			{
+				if($5.tipo != INT)
+					yyerror("only int available to array size");
+
+				int arr_tipo = tipo_umap_str[$2.label];
+
+				$$.tipo = ARRAY;
+				umap_label_add_array($$.label, arr_tipo, 1);
+
+				string label_start = temp_umap[$$.label].start_label;
+				string label_end = temp_umap[$$.label].end_label;
+				string label_step = temp_umap[$$.label].step_label;
+				string label_tamanho = temp_umap[$$.label].size_label;
+
+				$$.traducao = $5.traducao;
+				$$.traducao += "\tif(" + $5.label + " <= 0) goto OutOfBoundsError;\n";
+				$$.traducao += "\t" + label_tamanho + " = " + $5.label + "; //tamanho\n";
+				$$.traducao += "\t" + label_end + " = " + $5.label + " - 1; //end\n";
+				$$.traducao += "\t" + label_start + " = 0; //start\n";
+				$$.traducao += "\t" + label_step + " = 1; //step\n";
+				$$.traducao += "\t" + $$.label + " = malloc(sizeof(" + get_tipo(arr_tipo, 1) + ") * " + $5.label + ")); //alocando memoria\n";
 			}
 			;
 
@@ -894,7 +917,9 @@ REC_ATR		: TK_ID ',' REC_ATR ',' E
 ATR 		: TK_ID '=' E
 			{
 				//no caso da variavel ja ter um tipo setado no codigo
-				$1.label = get_current_context_id_label($1.traducao);
+				int ptrs = temp_umap[$3.label].ptrs;
+				int pointsTo = temp_umap[$3.label].pointsTo;
+				$1.label = get_current_context_id_label($1.traducao, 0, ptrs, pointsTo);
 				bool hasTamanho = false;
 
 				if($3.tipo == STRING || $3.tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices

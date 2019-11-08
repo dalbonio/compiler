@@ -16,7 +16,9 @@ using namespace std;
 struct variavel
 {
 	int tipo;
+	int pointsTo;
 	int fixed;
+	int ptrs;
 	string user_label;
 	string size_label;
 	string start_label;

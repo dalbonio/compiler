@@ -7,16 +7,18 @@
 #define QTD_OPERATORS 12
 #define QTD_TYPES 5
 
+#define NIL 0
 #define INT 1
 #define DOUBLE 2
 #define BOOLEAN 3
 #define STRING 4
 #define ITERATOR 5
-#define INTARR 6
+#define ARRAY 6
 #define DOUBLEARR 7
 #define BOOLEANARR 8
 #define STRINGARR 9
 #define ITERATORARR 10
+#define INTARR 11
 
 #define ADD 1
 #define SUB 2
