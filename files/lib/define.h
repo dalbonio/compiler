@@ -19,6 +19,7 @@
 #define STRINGARR 9
 #define ITERATORARR 10
 #define INTARR 11
+#define MATRIX 12
 
 #define ADD 1
 #define SUB 2

@@ -24,6 +24,12 @@ struct variavel
 	string start_label;
 	string end_label;
 	string step_label;
+
+	string start_col;
+	string step_col;
+	string end_col;
+
+	string row_size;
 };
 
 struct atributos

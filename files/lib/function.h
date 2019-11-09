@@ -15,6 +15,7 @@ void replace_all(std::string& data, std::string toSearch, std::string replaceStr
 void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
 void umap_label_add_iterator(string& new_label, int qtd_ptrs = 0);
 void umap_label_add_array(string& new_label, int tipo, int qtd_ptrs = 0);
+void umap_label_add_matrix(string& new_label, int tipo, int qtd_ptrs = 0);
 string search_variable(string var_name);
 string get_current_context_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = NIL);
 string get_id_label(string user_label);
@@ -259,6 +260,53 @@ void umap_label_add_array(string& new_label, int points_to, int qtd_ptrs)
 	temp_umap[new_label] = new_var;
 }
 
+void umap_label_add_matrix(string& new_label, int points_to, int qtd_ptrs)
+{
+	new_label = label_generator();
+	variavel new_var;
+	new_var.tipo = ARRAY;
+	new_var.pointsTo = points_to;
+
+	string size_label = label_generator();
+	string start_label = label_generator();
+	string end_label = label_generator();
+	string step_label = label_generator();
+
+	string start_col = label_generator();
+	string step_col = label_generator();
+	string end_col = label_generator();
+
+	string row_size = label_generator();
+
+	variavel size_var;
+	size_var.tipo = INT;
+
+	temp_umap[size_label] = size_var;
+	temp_umap[start_label] = size_var;
+	temp_umap[end_label] = size_var;
+	temp_umap[step_label] = size_var;
+
+	temp_umap[row_size] = size_var;
+	temp_umap[start_col] = size_var;
+	temp_umap[end_col] = size_var;
+	temp_umap[step_col] = size_var;
+
+	new_var.size_label = size_label;
+	new_var.start_label = start_label;
+	new_var.end_label = end_label;
+	new_var.step_label = step_label;
+
+	new_var.row_size = row_size;
+	new_var.start_col = start_col;
+	new_var.end_col = end_col;
+	new_var.step_col = step_col;
+
+	new_var.ptrs = qtd_ptrs;
+
+	temp_umap[new_label] = new_var;
+}
+
+
 string search_variable(string var_name)
 {
 	for(int i = context_stack.size() - 2; i >= 0 ; i--)
@@ -348,6 +396,8 @@ void initialize_proc_temp_umap()
 	proc_temp_umap["countTempLabel"] = INT;
 	proc_temp_umap["boundaryCheckTemp"] = INT;
 	proc_temp_umap["tempPos"] = INT;
+	proc_temp_umap["tempPosRow"] = INT;
+	proc_temp_umap["tempPosCol"] = INT;
 	proc_temp_umap["posTemp"] = INT;
 	proc_temp_umap["tmp"] = INT;
 	proc_temp_umap["pEndTemp1"] = INT;
