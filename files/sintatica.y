@@ -622,7 +622,9 @@ E 			: '(' E ')'
 					yyerror(string("E -> E '[' E ']'\nexpression doesnt evaluate to") + tipo_umap[$3.tipo]);
 				}
 
-				if(has_length.find($1.tipo) != has_length.end())
+				int isMat = temp_umap[$1.label].isMat;
+
+				if(has_length.find($1.tipo) != has_length.end() && isMat != 1)
 				{
 					string size_label = temp_umap[$1.label].size_label;
 					string start = temp_umap[$1.label].start_label;
@@ -725,7 +727,7 @@ E 			: '(' E ')'
 				}
 				else
 				{
-					yyerror("E -> E '[' E ']'\nexpression has no length attribute");
+					yyerror("E -> E '[' E ']'\nexpression is no array/string");
 				}
 			}
 			| E '[' E ',' E ']'
@@ -741,8 +743,9 @@ E 			: '(' E ')'
 				}
 
 				int pointsTo = temp_umap[$1.label].pointsTo;
+				int isMat = temp_umap[$1.label].isMat;
 
-				if($1.tipo == MATRIX || $1.tipo == ARRAY)
+				if($1.tipo == ARRAY && isMat)
 				{
 					string size_label = temp_umap[$1.label].size_label;
 					string start = temp_umap[$1.label].start_label;
@@ -826,19 +829,48 @@ E 			: '(' E ')'
 							{
 								$$.tipo == ARRAY;
 								int ptrs = temp_umap[$1.label].ptrs - 1;
-								int pointsTo = temp_umap[$1.label].pointsTo;
-								umap_label_add_array($$.label, pointsTo, ptrs);
+								int isMat = temp_umap[$1.label].isMat;
+								if(isMat)
+								{
+									umap_label_add_matrix($$.label, pointsTo, ptrs);
 
-								string tamanho_lbl = temp_umap[$$.label].size_label;
-								string start_lbl = temp_umap[$$.label].start_label;
-								string end_lbl = temp_umap[$$.label].end_label;
-								string step_lbl = temp_umap[$$.label].step_label;
+									string tamanho_lbl = temp_umap[$$.label].size_label;
+									string start_lbl = temp_umap[$$.label].start_label;
+									string end_lbl = temp_umap[$$.label].end_label;
+									string step_lbl = temp_umap[$$.label].step_label;
 
-								$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
-								$$.traducao += "\t" + step_lbl + " = " + step + "; //step\n";
-								$$.traducao += "\t" + start_lbl + " = " + start + "; //start\n";
-								$$.traducao += "\t" + end_lbl + " = " + end + "; //end\n";
-								$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+									string size_row_new = temp_umap[$$.label].row_size;
+									string start_col_new = temp_umap[$$.label].start_col;
+									string end_col_new = temp_umap[$$.label].end_col;
+									string step_col_new = temp_umap[$$.label].step_col;
+
+									$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
+									$$.traducao += "\t" + step_lbl + " = " + step + "; //step\n";
+									$$.traducao += "\t" + start_lbl + " = " + start + "; //start\n";
+									$$.traducao += "\t" + end_lbl + " = " + end + "; //end\n";
+
+									$$.traducao += "\t" + size_row_new + " = " + row_size +";\n";
+									$$.traducao += "\t" + step_col_new + " = " + step_col + "; //step\n";
+									$$.traducao += "\t" + start_col_new + " = " + start_col + "; //start\n";
+									$$.traducao += "\t" + end_col_new + " = " + end_col + "; //end\n";
+
+									$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+								}
+								else
+								{
+									umap_label_add_array($$.label, pointsTo, ptrs);
+
+									string tamanho_lbl = temp_umap[$$.label].size_label;
+									string start_lbl = temp_umap[$$.label].start_label;
+									string end_lbl = temp_umap[$$.label].end_label;
+									string step_lbl = temp_umap[$$.label].step_label;
+
+									$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
+									$$.traducao += "\t" + step_lbl + " = " + step + "; //step\n";
+									$$.traducao += "\t" + start_lbl + " = " + start + "; //start\n";
+									$$.traducao += "\t" + end_lbl + " = " + end + "; //end\n";
+									$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+								}
 							}
 							else
 							{
@@ -848,10 +880,59 @@ E 			: '(' E ')'
 							}
 						}
 					}
+					else//in case $3 or $5 is a slice
+					{
+						$$.tipo == ARRAY;
+						int ptrs = temp_umap[$1.label].ptrs - 1;
+						int isMat = temp_umap[$1.label].isMat;
+
+						umap_label_add_matrix($$.label, pointsTo, ptrs);
+
+						string tamanho_lbl = temp_umap[$$.label].size_label;
+						string start_lbl = temp_umap[$$.label].start_label;
+						string end_lbl = temp_umap[$$.label].end_label;
+						string step_lbl = temp_umap[$$.label].step_label;
+
+						string size_row_new = temp_umap[$$.label].row_size;
+						string start_col_new = temp_umap[$$.label].start_col;
+						string end_col_new = temp_umap[$$.label].end_col;
+						string step_col_new = temp_umap[$$.label].step_col;
+
+						if($3.tipo != ITERATOR)
+						{
+							//end row = start row = $3.label
+							//step row = 1
+							$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
+							$$.traducao += "\t" + step_lbl + " = 1; //step\n";
+							$$.traducao += "\t" + start_lbl + " = " + $3.label + "; //start\n";
+							$$.traducao += "\t" + end_lbl + " = " + start_lbl + "; //end\n";
+
+							$$.traducao += "\t" + size_row_new + " = " + row_size +";\n";
+							$$.traducao += "\t" + step_col_new + " = " + step_col + "; //step\n";
+							$$.traducao += "\t" + start_col_new + " = " + start_col + "; //start\n";
+							$$.traducao += "\t" + end_col_new + " = " + end_col + "; //end\n";
+						}
+						if($5.tipo != ITERATOR)
+						{
+							//end col = start col = $3.label
+							//step col = 1
+							$$.traducao += "\t" + tamanho_lbl + " = " + size_label +";\n";
+							$$.traducao += "\t" + step_lbl + " = " + step + "; //step\n";
+							$$.traducao += "\t" + start_lbl + " = " + start + "; //start\n";
+							$$.traducao += "\t" + end_lbl + " = " + end + "; //end\n";
+
+							$$.traducao += "\t" + size_row_new + " = " + row_size +";\n";
+							$$.traducao += "\t" + step_col_new + " = 1; //step\n";
+							$$.traducao += "\t" + start_col_new + " = " + $5.label + "; //start\n";
+							$$.traducao += "\t" + end_col_new + " = " + start_col_new + "; //end\n";
+						}
+
+						$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
+					}
 				}
 				else
 				{
-					yyerror("E -> E '[' E ']'\nexpression has no length attribute");
+					yyerror("E -> E '[' E ']'\nexpression is no matrix");
 				}
 			}
 			| '(' E ')' '?' E ':' E//ternário

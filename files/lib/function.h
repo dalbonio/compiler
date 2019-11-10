@@ -177,6 +177,7 @@ void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 	variavel new_var;
 	new_var.tipo = new_tipo;
 	new_var.ptrs = 0;
+	new_var.isMat = 0;
 	if(hasTamanho)
 	{
 		string size_label = label_generator();
@@ -208,6 +209,7 @@ void umap_label_add_iterator(string& new_label, int qtd_ptrs)
 	new_label = label_generator();
 	variavel new_var;
 	new_var.tipo = ITERATOR;
+	new_var.isMat = 0;
 
 	string size_label = label_generator();
 	string start_label = label_generator();
@@ -236,6 +238,7 @@ void umap_label_add_array(string& new_label, int points_to, int qtd_ptrs)
 	new_label = label_generator();
 	variavel new_var;
 	new_var.tipo = ARRAY;
+	new_var.isMat = 0;
 	new_var.pointsTo = points_to;
 
 	string size_label = label_generator();
@@ -266,6 +269,7 @@ void umap_label_add_matrix(string& new_label, int points_to, int qtd_ptrs)
 	variavel new_var;
 	new_var.tipo = ARRAY;
 	new_var.pointsTo = points_to;
+	new_var.isMat = 1;
 
 	string size_label = label_generator();
 	string start_label = label_generator();
@@ -408,6 +412,7 @@ void initialize_proc_temp_umap()
 	has_length.insert(pair<int, bool>(STRING, true));
 	has_length.insert(pair<int, bool>(ITERATOR, true));
 	has_length.insert(pair<int, bool>(ARRAY, true));
+	has_length.insert(pair<int, bool>(MATRIX, true));
 	has_length.insert(pair<int, bool>(DOUBLEARR, true));
 	has_length.insert(pair<int, bool>(STRINGARR, true));
 	has_length.insert(pair<int, bool>(ITERATORARR, true));

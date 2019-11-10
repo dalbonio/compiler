@@ -19,6 +19,8 @@ struct variavel
 	int pointsTo;
 	int fixed;
 	int ptrs;
+	int isMat;
+
 	string user_label;
 	string size_label;
 	string start_label;
