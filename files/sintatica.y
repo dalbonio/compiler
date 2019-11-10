@@ -257,6 +257,10 @@ COMANDO 	: E
 			{
 				$$.traducao = $1.traducao;
 			}
+			| BLOCO
+			{
+				$$.traducao = $1.traducao;
+			}
 			| ATR
 			{
 				$$.traducao = $1.traducao;
@@ -373,20 +377,21 @@ COMANDO 	: E
 				$$.traducao += "\tgoto " + cmd_label[2] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
-			| TK_LOOPEACH '(' TK_VAR TK_ID TK_IN E ')' BLOCO //fase de testes nao mudar nada
+			| TK_LOOPEACH '(' ATR ')' BLOCO //fase de testes nao mudar nada
 			{
-				if(has_length.find($6.tipo) == has_length.end())
+				if(has_length.find($3.tipo) == has_length.end())
 				{
 					yyerror("COMANDO -> TK_LOOPEACH (E) BLOCO//for\nelement doesnt have iterator implemented.\n");
 				}
 
-				string size_label = temp_umap[$6.label].size_label;
-				string start = temp_umap[$6.label].start_label;
-				string step = temp_umap[$6.label].step_label;
-				string end = temp_umap[$6.label].end_label;
+				string size_label = temp_umap[$3.label].size_label;
+				string start = temp_umap[$3.label].start_label;
+				string step = temp_umap[$3.label].step_label;
+				string end = temp_umap[$3.label].end_label;
 
 				string new_label;
 				string cmd_label[3] = {cmd_label_generator(), cmd_label_end_generator(), cmd_label_iter_generator()};
+
 				//cmdLabelContador++;
 
 				// $$.traducao += "\n\t" + ref_index + " = " + start + " //ref index start foreach;\n";
