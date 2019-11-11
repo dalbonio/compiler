@@ -21,14 +21,16 @@ int yylex(void);
 
 %start S
 
-%left '='
+%left TK_ID TK_NUM TK_REAL TK_STR TK_BOOL TK_INPUT
+%left '=' TK_CONT
 %left TK_OP_LOG
 %left TK_OP_REL
 %left TK_NOT
-%left '+'
-%left '-'
+%left '+' '-'
 %left '*' '/'
 %left '[' ']'
+%left TK_INCR TK_DECR
+%left TK_GLOBAL
 %left '(' ')'
 
 %%
@@ -353,9 +355,9 @@ COMANDO 	: E
 				//$$.traducao += "\tgoto " + cmd_label[0] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
-			| TK_LOOP '(' ATR ';' E ';' CONT ')' BLOCO//for
+			| TK_FOR '(' ATR ';' E ';' CONT ')' BLOCO//for
 			{
-				if($2.tipo != BOOLEAN)
+				if($5.tipo != BOOLEAN)
 				{
 					yyerror("COMANDO -> TK_LOOP '(' ATR ';' E ';' CONT ')' BLOCO//for\nThis condition is not a boolean.\n");
 				}
@@ -377,25 +379,64 @@ COMANDO 	: E
 				$$.traducao += "\tgoto " + cmd_label[2] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
-			| TK_LOOPEACH '(' ATR ')' BLOCO //fase de testes nao mudar nada
+			| TK_LOOPEACH '(' TK_ID TK_IN E ')' BLOCO //fase de testes nao mudar nada
 			{
-				if(has_length.find($3.tipo) == has_length.end())
-				{
-					yyerror("COMANDO -> TK_LOOPEACH (E) BLOCO//for\nelement doesnt have iterator implemented.\n");
-				}
-
-				string size_label = temp_umap[$3.label].size_label;
-				string start = temp_umap[$3.label].start_label;
-				string step = temp_umap[$3.label].step_label;
-				string end = temp_umap[$3.label].end_label;
-
-				string new_label;
-				string cmd_label[3] = {cmd_label_generator(), cmd_label_end_generator(), cmd_label_iter_generator()};
-
-				//cmdLabelContador++;
-
-				// $$.traducao += "\n\t" + ref_index + " = " + start + " //ref index start foreach;\n";
-				// $$.traducao += "\n\t" + $4.label + " = " + $6.label + "[" + ref_index + "]; //ref label start foreach\n";
+				// if(has_length.find($5.tipo) == has_length.end())
+				// {
+				// 	yyerror("COMANDO -> TK_LOOPEACH (E) BLOCO//for\nelement doesnt have iterator implemented.\n");
+				// }
+				//
+				// if(has_length.find($5.tipo) == has_length.end())
+				// 	yyerror($5.label + "has not length attribute");
+				//
+				// int ptrs = temp_umap[$5.label].ptrs;
+				// int pointsTo = temp_umap[$5.label].pointsTo;
+				// //iterators dont need pointers
+				// if($5 != ITERATOR)
+				// {
+				// 	ptrs -= 1;
+				// 	pointsTo = INT
+				// }
+				//
+				// $3.label = get_current_context_id_label($3.traducao, 1, ptrs, pointsTo);
+				// $3.tipo = temp_umap[$3.label].tipo;
+				//
+				// int isMat = temp_umap[$3.label].isMat;
+				// //if all good get id as starting position
+				//
+				// if($3.tipo == STRING || $3.tipo == ITERATOR || $3.tipo == ARRAY) //add new types with size in if clause, as vectors, matrices
+				// {
+				// 	hasTamanho = true;
+				// 	umap_label_add_array
+				// }
+				//
+				// if($1.tipo == ARRAY)
+				// {
+				// 	temp_umap[$1.label].row_size = temp_umap[$3.label].row_size;
+				// 	temp_umap[$1.label].start_col = temp_umap[$3.label].start_col;
+				// 	temp_umap[$1.label].step_col = temp_umap[$3.label].step_col;
+				// 	temp_umap[$1.label].end_col = temp_umap[$3.label].end_col;
+				// }
+				//
+				// $$.tipo = $1.tipo;
+				// auto& cur_umap = context_stack.back();
+				// temp_umap[cur_umap[$1.traducao]].tipo = $1.tipo;
+				// $$.label = $1.label;
+				//
+				// $$.traducao = $3.traducao;
+				//
+				// string size_label = temp_umap[$3.label].size_label;
+				// string start = temp_umap[$3.label].start_label;
+				// string step = temp_umap[$3.label].step_label;
+				// string end = temp_umap[$3.label].end_label;
+				//
+				// string new_label;
+				// string cmd_label[3] = {cmd_label_generator(), cmd_label_end_generator(), cmd_label_iter_generator()};
+				// cmdLabelContador++;
+				//
+				// $$.traducao = $3.traducao; //foreach started here
+				// $$.traducao += "\n\t" + $3.label + " = " + start + " //ref index start foreach;\n";
+				// $$.traducao += "\n\t" + $3.label + " = " + $6.label + "[" + ref_index + "]; //ref label start foreach\n";
 				// $$.traducao += "\t" + cmd_label[0] + ":\n";
 				// $$.traducao += "\ttmp = " + ref_index + " == " + end + ";\n";
 				// $$.traducao += "\ttmp = !(tmp);\n";
@@ -406,6 +447,8 @@ COMANDO 	: E
 				// $$.traducao += "\n\t" + $4.label + " = " + $6.label + "[" + ref_index + "]; //ref label iter foreach\n";
 				// $$.traducao += "\tgoto " + cmd_label[0] + ";\n";
 				// $$.traducao += "\t" + cmd_label[1] + ":\n\n";
+
+				//cmdLabelContador++;
 			}
 			| TK_IF '(' E ')' BL_IF
 			{
@@ -815,21 +858,21 @@ E 			: '(' E ')'
 						//$$.traducao += "\t" + after_lbl + ":\n";
 						//new $$ type is array $1 associated type.
 						//Ex: if $1 is int array, $$ type is int
-						if(pointsTo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
-						{
-							$$.tipo = STRING;
-							umap_label_add($$.label, $$.tipo, true);
-							string label_tamanho = temp_umap[$$.label].size_label;
-
-							$$.traducao += "\t" + label_tamanho + " = 2;\n";
-							$$.traducao += "\t" + step + " = 1; //step\n";
-							$$.traducao += "\t" + start + " = 0; //start\n";
-							$$.traducao += "\t" + end + " = 2; //end\n";
-							$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
-							$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[tempPos];" + $1.label + "[1] = \'\\0\';\n";
-						}
-						else
-						{
+						// if(pointsTo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
+						// {
+						// 	$$.tipo = STRING;
+						// 	umap_label_add($$.label, $$.tipo, true);
+						// 	string label_tamanho = temp_umap[$$.label].size_label;
+						//
+						// 	$$.traducao += "\t" + label_tamanho + " = 2;\n";
+						// 	$$.traducao += "\t" + step + " = 1; //step\n";
+						// 	$$.traducao += "\t" + start + " = 0; //start\n";
+						// 	$$.traducao += "\t" + end + " = 2; //end\n";
+						// 	$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
+						// 	$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[tempPos];" + $1.label + "[1] = \'\\0\';\n";
+						// }
+						// else
+						// {
 							if(temp_umap[$1.label].ptrs > 1)
 							{
 								$$.tipo == ARRAY;
@@ -877,13 +920,26 @@ E 			: '(' E ')'
 									$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
 								}
 							}
+							else if(pointsTo == STRING)//substitute if by "$$.tipo = assoc_map[$1.tipo]"
+							{
+								$$.tipo = STRING;
+								umap_label_add($$.label, $$.tipo, true);
+								string label_tamanho = temp_umap[$$.label].size_label;
+
+								$$.traducao += "\t" + label_tamanho + " = 2;\n";
+								$$.traducao += "\t" + step + " = 1; //step\n";
+								$$.traducao += "\t" + start + " = 0; //start\n";
+								$$.traducao += "\t" + end + " = 2; //end\n";
+								$$.traducao += "\t" + $$.label + " = (char*) malloc(sizeof(char) * 2);\n";
+								$$.traducao += "\t" + $$.label + "[0] = " + $1.label + "[tempPos];" + $1.label + "[1] = \'\\0\';\n";
+							}
 							else
 							{
 								int pointsTo = temp_umap[$1.label].pointsTo;
 								umap_label_add($$.label, pointsTo, false);
 								$$.traducao += "\t" + $$.label + " = " + $1.label + "[tempPos];\n";
 							}
-						}
+						//}
 					}
 					else//in case $3 or $5 is a slice
 					{
@@ -968,10 +1024,6 @@ E 			: '(' E ')'
 				$$.traducao = $1.traducao;
 				$$.label = $1.label;
 			}
-			// | ATR
-			// {
-			// 	$$.traducao = $1.traducao;
-			// }
 			| TK_NUM
 			{
 				$$.tipo = $1.tipo;
@@ -1043,9 +1095,9 @@ E 			: '(' E ')'
 
 				$$.traducao = "";
 			}
-			| E ':' E ':' E
+			| E PE2 PE2
 			{
-				if( $1.tipo != INT || $3.tipo != INT || $5.tipo != INT)
+				if( $1.tipo != INT || $2.tipo != INT || $3.tipo != INT)
 					yyerror("only int available to iterators");
 
 				$$.tipo = ITERATOR;
@@ -1056,24 +1108,24 @@ E 			: '(' E ')'
 				string label_step = temp_umap[$$.label].step_label;
 				string label_tamanho = temp_umap[$$.label].size_label;
 
-				$$.traducao = $1.traducao + $3.traducao + $5.traducao;
-				$$.traducao += string("\t") + "pEndTemp1 = " + $3.label + " - " + $1.label + ";\n";
-				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $5.label + ";\n";
-				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $5.label + ";\n";
-				$$.traducao += "\tposTemp = " + $1.label + " - " + $3.label + ";\n";
+				$$.traducao = $1.traducao + $2.traducao + $3.traducao;
+				$$.traducao += string("\t") + "pEndTemp1 = " + $2.label + " - " + $1.label + ";\n";
+				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $3.label + ";\n";
+				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $3.label + ";\n";
+				$$.traducao += "\tposTemp = " + $1.label + " - " + $2.label + ";\n";
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
-				$$.traducao += "\tposTemp = posTemp / " + $5.label + ";\n";
+				$$.traducao += "\tposTemp = posTemp / " + $3.label + ";\n";
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
 				$$.traducao += "\t" + label_tamanho + " = posTemp + 1; //tamanho\n";
 				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
 				//$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
-				$$.traducao += "\t" + label_step + " = " + $5.label + "; //step\n";
+				$$.traducao += "\t" + label_step + " = " + $3.label + "; //step\n";
 				$$.traducao += "\t" + $$.label + " = -1;\n";
 			}
-			| E ':' E
+			| E PE2
 			{
-				if($1.tipo != INT || $3.tipo != INT)
+				if($1.tipo != INT || $2.tipo != INT)
 					yyerror("only int available to iterators");
 
 				$$.tipo = ITERATOR;
@@ -1084,8 +1136,8 @@ E 			: '(' E ')'
 				string label_step = temp_umap[$$.label].step_label;
 				string label_tamanho = temp_umap[$$.label].size_label;
 
-				$$.traducao = $1.traducao + $3.traducao;
-				$$.traducao += "\t" + label_end + " = " + $3.label + "; //end\n";
+				$$.traducao = $1.traducao + $2.traducao;
+				$$.traducao += "\t" + label_end + " = " + $2.label + "; //end\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
 				$$.traducao += "\t" + label_step + " = 1; //step\n";
 				$$.traducao += "\ttempPos = " + label_start + " - " + label_end + ";\n";
@@ -1097,7 +1149,7 @@ E 			: '(' E ')'
 			{
 
 			}
-			| '<' TK_CASTING '>' '[' E ']'
+			| '{' TK_CASTING '}' '[' E ']'
 			{
 				if($5.tipo != INT)
 					yyerror("only int available to array size");
@@ -1229,7 +1281,7 @@ ATR 		: TK_ID '=' E
 					temp_umap[$1.label].end_label = temp_umap[$3.label].end_label;
 				}
 
-				if($3.tipo == ARRAY || $3.tipo == MATRIX)
+				if($3.tipo == ARRAY)
 				{
 					temp_umap[$1.label].row_size = temp_umap[$3.label].row_size;
 					temp_umap[$1.label].start_col = temp_umap[$3.label].start_col;
@@ -1503,10 +1555,20 @@ ARR_REC		: E ','
 
 CONT		: TK_ID TK_CONT E
 			{
+				string user_label = $1.traducao;
+				auto& lbl_umap = context_stack.back();
+				if(lbl_umap.find(user_label) == lbl_umap.end() )
+					yyerror($1.label + "not declared");
+
+				$1.label = get_current_context_id_label($1.traducao, 0, 0, 0);
 				if(temp_umap[$1.label].tipo == 0 || temp_umap[$1.label].tipo >= BOOLEAN)
 				{
-					yyerror("CONT -> TK_ID TK_CONT E\nNO!!!");
+					yyerror("CONT -> TK_ID TK_CONT E\nOperacao Invalida!!!");
 				}
+
+				int ptrs = temp_umap[$1.label].ptrs;
+				int pointsTo = temp_umap[$1.label].pointsTo;
+
 
 				$$.traducao = $3.traducao;
 
@@ -1601,6 +1663,13 @@ BL_END		: TK_END
 			{
 				endContext();
 				$$.traducao = "";
+			};
+
+PE2			: ':' E
+			{
+				$$.label = $1.label;
+				$$.tipo = $1.tipo;
+				$$.traducao = $1.traducao;
 			};
 
 %%

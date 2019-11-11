@@ -30,7 +30,8 @@ OP_LOG and|or
 "input"                     { return TK_INPUT; }
 "print"                     { return TK_PRINT; }
 "loop"		                { cmdLabelContador++; return TK_LOOP; }
-"loopeach"		            { return TK_LOOPEACH; }
+"for"		                { pushContext(); ctxPushReseter = 1; return TK_FOR; }
+"loopeach"		            { pushContext(); ctxPushReseter = 1; return TK_LOOPEACH; }
 "if"		                { return TK_IF; }
 "else"                      { return TK_ELSE; }
 "elif"						{ return TK_ELSEIF; }
@@ -53,7 +54,7 @@ OP_LOG and|or
 "*="		                { yylval.traducao = yytext; return TK_CONT; }
 "/="		                { yylval.traducao = yytext; return TK_CONT; }
 
-[#(){}[\];,:?<>]	        { return *yytext; }
+[#(){}[\];,:?]	            { return *yytext; }
 [=!]		                { return *yytext; }
 [+\-*/]                     { yylval.traducao = yytext; return TK_OP_ARIT; }
 

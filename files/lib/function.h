@@ -484,7 +484,14 @@ string genAfterSliceLabel()
 
 void pushContext()
 {
-	context_stack.push_back(unordered_map<string, string>());
+	if(ctxPushReseter)
+	{
+		ctxPushReseter = 0;
+	}
+	else
+	{
+		context_stack.push_back(unordered_map<string, string>());
+	}
 }
 
 void endContext()
