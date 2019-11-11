@@ -407,6 +407,7 @@ void initialize_proc_temp_umap()
 	proc_temp_umap["pEndTemp1"] = INT;
 	proc_temp_umap["pEndTemp2"] = INT;
 	proc_temp_umap["pEndTemp3"] = INT;
+	proc_temp_umap["expTempLabel"] = INT;
 
 
 	has_length.insert(pair<int, bool>(STRING, true));
@@ -443,12 +444,12 @@ int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3)
 
 string genCountStrLabelStart()
 {
-	return string("CountStrLabelStart") + to_string(strLabelCounter) + "\n";
+	return string("CountStrLabelStart") + to_string(strLabelCounter);
 }
 
 string genCountStrLabelEnd()
 {
-	string str = string("CountStrLabelEnd") + to_string(strLabelCounter) + "\n";
+	string str = string("CountStrLabelEnd") + to_string(strLabelCounter);
 	return str;
 }
 
@@ -505,11 +506,11 @@ string countStringProc()
 	string labelStart = genCountStrLabelStart();
 	string labelEnd = genCountStrLabelEnd();
 
-	traducao += "\tcountTempLabel = 0\n";
-	traducao += "\t" + labelStart + ":";
+	traducao += "\tcountTempLabel = 0;\n";
+	traducao += "\t" + labelStart + ":\n";
 	traducao += "\texpTempLabel = buffer[countTempLabel] == \'\\0\';\n";
 	traducao += "\tif(expTempLabel) goto " + genCountStrLabelEnd() + ";\n";
-	traducao += "\tcountTempLabel = countTempLabel + 1\n";
+	traducao += "\tcountTempLabel = countTempLabel + 1;\n";
 	traducao += "\tgoto " + labelStart + ";\n";
 	traducao += "\t" + labelEnd + ":\n";
 
@@ -591,6 +592,25 @@ void set_string_matrix()
 	string command7 = "\tmain_label = new_label;\n";
 	matrix[ADD][STRING][STRING] = to_string(STRING) + command1 + command2 + command3 + command4 + command5 + command6 + command7;
 
+	string command8 = string("\tsprintf(") + "convert_label, \"%lf\", second_label);\n";
+	string command9 = string("\tsprintf(") + "convert_label, \"%lf\", first_label);\n";
+	string command10 = string("\tsprintf(") + "convert_label, \"%d\", second_label);\n";
+	string command11 = string("\tsprintf(") + "convert_label, \"%d\", first_label);\n";
+	string command12 = command1 + command2 + command3 + command4 + command5 + command6 + command7; 
+	string command13 = command1 + command2 + command3 + command4 + command5 + command6 + command7;
+	string command14 = countStringProc();
+	string command15 = "\tsize_convert_str = countTempLabel;\n";
+	
+	replace_all(command12, "second_label", "convert_label");
+	replace_all(command12, "size_second_str", "size_convert_str");
+	replace_all(command13, "first_label", "convert_label");
+	replace_all(command13, "size_first_str", "convert_label");
+
+	matrix[ADD][STRING][DOUBLE] = to_string(STRING) + command8 + command14 + command15 + command12;
+	matrix[ADD][DOUBLE][STRING] = to_string(STRING) + command9 + command14 + command15 + command13;
+	matrix[ADD][STRING][INT] = to_string(STRING) + command10 + command14 + command15 + command12;
+	matrix[ADD][INT][STRING] = to_string(STRING) + command11 + command14 + command15 + command13;
+
 	for(int i = EQ; i <= LESS; i++)
 	{
 		string command1 = "\tnew_label = strcmp(first_label, second_label);\n";
@@ -625,12 +645,16 @@ string string_to_int(string str_label, string int_label)
 
 string double_to_string(string double_label, string str_label)
 {
-	return string("\tsprintf( ") + str_label + ", \"%lf\", " + double_label + ");\n";
+	string command1 = string("\t") + str_label + " = (char*) malloc(" + to_string(MAX_DOUBLE) + ");\n";
+	string command2 = string("\tsprintf(") + str_label + ", \"%lf\", " + double_label + ");\n";
+	return command1 + command2;
 }
 
-string int_to_double(string int_label, string str_label)
+string int_to_string(string int_label, string str_label)
 {
-	return string("\tsprintf( ") + str_label + ", \"%d\", " + int_label + ");\n";
+	string command1 = string("\t") + str_label + " = (char*) malloc(" + to_string(MAX_INT) + ");\n";
+	string command2 = string("\tsprintf(") + str_label + ", \"%d\", " + int_label + ");\n";
+	return command1 + command2;
 }
 
 string cmd_label_generator(string cmd_name, int desloc)
@@ -728,17 +752,24 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 	{
 		hasTamanho = true;
 		umap_label_add(new_label, new_type, hasTamanho);
+		temp_umap[new_label].pointsTo = STRING;
 		temp_umap[new_label].ptrs = 1;
 	}
-
-	if((atr_1.tipo != atr_3.tipo) && hasTamanho == false)
+	else
 	{
 		umap_label_add(new_label, new_type, hasTamanho);
 	}
-
+	
 	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
 	{
 		atr_main.tipo = new_type;
+		umap_label_add(atr_main.label, atr_main.tipo, hasTamanho);
+
+		if(new_type == STRING)
+		{
+			temp_umap[atr_main.label].ptrs = 1;
+			temp_umap[atr_main.label].pointsTo = STRING;
+		}
 	}
 
 	op_translate.replace(0, 1, "");
@@ -753,6 +784,17 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 		replace_all(op_translate, "size_first_str", temp_umap[atr_1.label].size_label);
 		replace_all(op_translate, "size_second_str", temp_umap[atr_3.label].size_label);
 
+		if(atr_1.tipo != STRING || atr_3.tipo != STRING)
+		{
+			string convert_label;
+			umap_label_add(convert_label, STRING, hasTamanho);
+			temp_umap[convert_label].ptrs = 1;
+			temp_umap[convert_label].pointsTo = STRING;
+			op_translate = string("\t") + convert_label + " = (char*) malloc(" + to_string(MAX_DOUBLE) + ");\n" + op_translate;
+			replace_all(op_translate, "size_convert_str", temp_umap[convert_label].size_label);
+			replace_all(op_translate, "convert_label", convert_label);
+		}
+		
 		if(op >= EQ && op <= LESS)
 		{
 			replace_all(op_translate, "string_start", cmd_label_generator("STRING"));
@@ -773,3 +815,4 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 }
 
 #endif
+//IRMAO OLHA O TAMANHO DAS STRINGS VINDAS DE DOUBLE E DE INT
