@@ -33,8 +33,8 @@ OP_LOG and|or
 "for"		                { pushContext(); ctxPushReseter = 1; return TK_FOR; }
 "loopeach"		            { pushContext(); ctxPushReseter = 1; return TK_LOOPEACH; }
 "if"		                { return TK_IF; }
-"else"                      { return TK_ELSE; }
-"elif"						{ return TK_ELSEIF; }
+"else"                      { context_stack.pop_back(); return TK_ELSE; }
+"elif"						{ context_stack.pop_back(); return TK_ELSEIF; }
 "do"		                { pushContext(); return TK_DO; }
 "end"		                { return TK_END; }
 "not"		                { return TK_NOT; }
