@@ -1,2 +1,1 @@
-var a = "1.2"
-var b = (double) a
+string a = (string) 1.2

@@ -569,6 +569,17 @@ E 			: '(' E ')'
 						$$.traducao += string_to_int($4.label, $$.label);
 					}
 				}
+				else if($$.tipo == STRING)
+				{
+					if($4.tipo == DOUBLE)
+					{
+						$$.traducao += double_to_string($4.label, $$.label);
+					}
+					else if($4.tipo == INT)
+					{
+						$$.traducao += int_to_string($4.label, $$.label);
+					}
+				}
 				else
 				{
 					$$.traducao += "\t" + $$.label + " = " + "(" + $2.label + ") " + $4.label + ";\n";
