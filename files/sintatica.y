@@ -587,14 +587,9 @@ E 			: '(' E ')'
 			}
 			| E TK_OP_ARIT E
 			{
-				variavel new_var;
-
-				$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
 				$$.traducao += types_operations($$, $1, $2, $3, 0);
 
-				new_var.tipo = $$.tipo;
-				temp_umap[$$.label] = new_var;
 				//cout << $$.label;
 				//$$.resultado = $1.resultado + $3.resultado;
 			}

@@ -583,7 +583,7 @@ void set_boolean_matrix()
 void set_string_matrix()
 {
 	string command1 = "\tsize_final_str = size_first_str + size_second_str;\n";
-	string command2 = "\tsize_final_str = size_final_str - 1;\n";
+	string command2 = "\tsize_final_str = size_final_str + 1;\n";
 	string command3 = "\tnew_label = (char*) malloc(size_final_str);\n";
 	string command4 = "\tstrcpy(new_label, \"\");\n";
 	string command5 = "\tstrcat(new_label, first_label);\n";
@@ -728,6 +728,7 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 	{
 		hasTamanho = true;
 		umap_label_add(new_label, new_type, hasTamanho);
+		temp_umap[new_label].ptrs = 1;
 	}
 
 	if((atr_1.tipo != atr_3.tipo) && hasTamanho == false)
