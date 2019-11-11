@@ -273,6 +273,8 @@ COMANDO 	: E
 			}
 			| TK_BREAK
 			{
+				if(context_stack.size() == 1)
+					yyerror("there's no context to break");
 				string goto_label = cmd_label_end_generator();
 				$$.traducao = string("\tgoto ") + goto_label + ";\n";
 			}
@@ -355,7 +357,7 @@ COMANDO 	: E
 				//$$.traducao += "\tgoto " + cmd_label[0] + ";\n";
 				$$.traducao += "\t" + cmd_label[1] + ":\n\n";
 			}
-			| TK_FOR '(' ATR ';' E ';' CONT ')' BLOCO//for
+			| TK_FOR '(' ATR ';' E ';' ATR ')' BLOCO//for
 			{
 				if($5.tipo != BOOLEAN)
 				{
@@ -1035,12 +1037,6 @@ E 			: '(' E ')'
 				$$.traducao = $1.traducao;
 				$$.label = $1.label;
 			}
-			| CONT
-			{
-				$$.tipo = $1.tipo;
-				$$.traducao = $1.traducao;
-				$$.label = $1.label;
-			}
 			| TK_NUM
 			{
 				$$.tipo = $1.tipo;
@@ -1499,7 +1495,14 @@ ATR 		: TK_ID '=' E
 
 				//after calculating position in tempPos, attempt to insert new item in array
 				$$.traducao += "\t" + $1.label + "[tempPos] = " + $8.label + "; //inserting in position\n\n";
-			};
+			}
+			| CONT
+			{
+				$$.tipo = $1.tipo;
+				$$.traducao = $1.traducao;
+				$$.label = $1.label;
+			}
+			;
 
 DCLR		: TK_CASTING TK_ID
 			{
