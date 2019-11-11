@@ -18,7 +18,7 @@ void umap_label_add_array(string& new_label, int tipo, int qtd_ptrs = 0);
 void umap_label_add_matrix(string& new_label, int tipo, int qtd_ptrs = 0);
 string search_variable(string var_name);
 string get_current_context_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = NIL);
-string get_id_label(string user_label);
+string get_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = NIL);
 string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false);
 void initialize_proc_temp_umap();
 int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
@@ -357,7 +357,7 @@ string get_current_context_id_label(string user_label, int fixed, int ptrs, int 
 	return lbl_umap[user_label];
 }
 
-string get_id_label(string user_label)
+string get_id_label(string user_label, int fixed, int ptrs, int pointsTo)
 {
 	auto& lbl_umap = context_stack.back();
 	string label = search_variable(user_label);
@@ -596,11 +596,11 @@ void set_string_matrix()
 	string command9 = string("\tsprintf(") + "convert_label, \"%lf\", first_label);\n";
 	string command10 = string("\tsprintf(") + "convert_label, \"%d\", second_label);\n";
 	string command11 = string("\tsprintf(") + "convert_label, \"%d\", first_label);\n";
-	string command12 = command1 + command2 + command3 + command4 + command5 + command6 + command7; 
+	string command12 = command1 + command2 + command3 + command4 + command5 + command6 + command7;
 	string command13 = command1 + command2 + command3 + command4 + command5 + command6 + command7;
 	string command14 = countStringProc();
 	string command15 = "\tsize_convert_str = countTempLabel;\n";
-	
+
 	replace_all(command12, "second_label", "convert_label");
 	replace_all(command12, "size_second_str", "size_convert_str");
 	replace_all(command13, "first_label", "convert_label");
@@ -759,7 +759,7 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 	{
 		umap_label_add(new_label, new_type, hasTamanho);
 	}
-	
+
 	if(final_type == 0) //para casos onde a expressao retorna um tipo diferente do tipo convertido
 	{
 		atr_main.tipo = new_type;
@@ -794,7 +794,7 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 			replace_all(op_translate, "size_convert_str", temp_umap[convert_label].size_label);
 			replace_all(op_translate, "convert_label", convert_label);
 		}
-		
+
 		if(op >= EQ && op <= LESS)
 		{
 			replace_all(op_translate, "string_start", cmd_label_generator("STRING"));

@@ -1300,6 +1300,65 @@ ATR 		: TK_ID '=' E
 				$$.traducao = $3.traducao + "\t" + $$.label + " = " + $3.label + ";\n\n";
 				//$$.resultado = $1.resultado;
 			}
+			| TK_GLOBAL TK_ID '=' E
+			{
+				//no caso da variavel ja ter um tipo setado no codigo
+				string label = search_variable($2.traducao);
+				if(label == "0")
+					yyerror( $2.traducao + "variable not declared");
+
+				int ptrs = temp_umap[$4.label].ptrs;
+				int pointsTo = temp_umap[$4.label].pointsTo;
+				$2.label = get_id_label($2.traducao, 0, 0, 0);
+
+				bool hasTamanho = false;
+
+				if($4.tipo == STRING || $4.tipo == ITERATOR || $4.tipo == ARRAY) //add new types with size in if clause, as vectors, matrices
+				{
+					hasTamanho = true;
+					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
+					temp_umap[$2.label].start_label = temp_umap[$4.label].start_label;
+					temp_umap[$2.label].step_label = temp_umap[$3.label].step_label;
+					temp_umap[$2.label].end_label = temp_umap[$3.label].end_label;
+				}
+
+				if($4.tipo == ARRAY)
+				{
+					temp_umap[$2.label].row_size = temp_umap[$4.label].row_size;
+					temp_umap[$2.label].start_col = temp_umap[$4.label].start_col;
+					temp_umap[$2.label].step_col = temp_umap[$4.label].step_col;
+					temp_umap[$2.label].end_col = temp_umap[$4.label].end_col;
+				}
+
+				if( temp_umap[$2.label].tipo != 0
+					&& temp_umap[$2.label].tipo != $4.tipo
+					&& temp_umap[$2.label].fixed == 0){
+
+					$$.tipo = $4.tipo;
+					temp_umap[$2.label].isMat = temp_umap[$4.label].isMat;
+					//criar uma temporaria nova pra guardar o antigo valor
+					if($$.tipo != ITERATOR)
+					{
+						$$.label = add_variable_in_current_context($2.traducao, $$.tipo, hasTamanho);
+					}
+					else
+					{
+						$$.label = add_iterator_in_current_context($2.traducao);
+					}
+				}
+				else if(temp_umap[$2.label].fixed == 1)
+				{
+					//conversao implicita
+				}
+				else
+				{
+					$$.label = $2.label;
+					$$.tipo = temp_umap[$$.label].tipo;
+				}
+
+				$$.traducao = $4.traducao + "\t" + $$.label + " = " + $4.label + ";\n\n";
+				//$$.resultado = $1.resultado;
+			}
 			| TK_ID '[' E ']' '=' E
 			{
 				string user_label = $1.traducao;
