@@ -1463,8 +1463,16 @@ ATR 		: TK_ID '=' E
 
 DCLR		: TK_CASTING TK_ID
 			{
-				$2.label = get_current_context_id_label($2.traducao, 1);
 				int tipo = tipo_umap_str[$1.label];
+				int ptrs = 0;
+				int pointsTo = 0;
+				if(tipo == STRING)
+				{
+					ptrs = 1;
+				}
+
+				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+
 				if(temp_umap[$2.label].tipo != 0)
 				{
 					yyerror($2.traducao + "ja declarada");
@@ -1477,8 +1485,15 @@ DCLR		: TK_CASTING TK_ID
 			}
 			| TK_CASTING TK_ID '=' E
 			{
-				$2.label = get_current_context_id_label($2.traducao, 1);
 				int tipo = tipo_umap_str[$1.label];
+				int ptrs = 0;
+				int pointsTo = 0;
+				if(tipo == STRING)
+				{
+					ptrs = 1;
+				}
+				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+
 				if(temp_umap[$2.label].tipo != 0)
 				{
 					yyerror($2.traducao + "ja declarada");
@@ -1494,7 +1509,7 @@ DCLR		: TK_CASTING TK_ID
 				}
 
 				bool hasTamanho = false;
-				if(tipo == STRING || tipo == ITERATOR) //add new types with size in if clause, as vectors, matrices
+				if(tipo == STRING || tipo == ITERATOR || tipo == ARRAY) //add new types with size in if clause, as vectors, matrices
 				{
 					hasTamanho = true;
 					temp_umap[$2.label].size_label = temp_umap[$4.label].size_label;
