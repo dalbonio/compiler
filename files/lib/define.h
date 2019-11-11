@@ -3,6 +3,8 @@
 
 #define YYSTYPE atributos
 
+#define MAX_DOUBLE 350
+#define MAX_INT 15
 #define ERROR_VALUE "-1"
 #define QTD_OPERATORS 12
 #define QTD_TYPES 5

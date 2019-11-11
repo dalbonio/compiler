@@ -544,8 +544,20 @@ E 			: '(' E ')'
 				{
 					yyerror("erro na conversao");
 				}*/
+
 				$$.tipo = tipo_umap_str[$2.label];
-				umap_label_add($$.label, $$.tipo);
+
+				if($2.label == "string")
+				{
+					umap_label_add($$.label, $$.tipo, true);
+					temp_umap[$$.label].ptrs = 1;
+					temp_umap[$$.label].pointsTo = STRING;
+				}
+				else
+				{
+					umap_label_add($$.label, $$.tipo);
+				}
+
 				$$.traducao = $4.traducao;
 
 				if($$.tipo == BOOLEAN)
@@ -574,10 +586,14 @@ E 			: '(' E ')'
 					if($4.tipo == DOUBLE)
 					{
 						$$.traducao += double_to_string($4.label, $$.label);
+						$$.traducao += countStringProc();
+						$$.traducao += "\t" + temp_umap[$$.label].size_label + " = countTempLabel;\n";
 					}
 					else if($4.tipo == INT)
 					{
 						$$.traducao += int_to_string($4.label, $$.label);
+						$$.traducao += countStringProc();
+						$$.traducao += "\t" + temp_umap[$$.label].size_label + " = countTempLabel;\n";
 					}
 				}
 				else
@@ -648,12 +664,12 @@ E 			: '(' E ')'
 			{
 				variavel new_var;
 
-				$$.label = label_generator();
+				//$$.label = label_generator();
 				$$.traducao = $1.traducao + $3.traducao;
 				$$.traducao += types_operations($$, $1, $2, $3, 0);
 
-				new_var.tipo = $$.tipo;
-				temp_umap[$$.label] = new_var;
+				//new_var.tipo = $$.tipo;
+				//temp_umap[$$.label] = new_var;
 				//cout << $$.label;
 				//$$.resultado = $1.resultado + $3.resultado;
 			}
@@ -1499,6 +1515,11 @@ DCLR		: TK_CASTING TK_ID
 				int tipo = tipo_umap_str[$1.label];
 				int ptrs = 0;
 				int pointsTo = 0;
+
+				if(tipo != $4.tipo)//por enquanto
+				{
+					yyerror("DCLR -> TK_CASTING TK_ID '=' E\ncoercao nao permitida");
+				}
 				if(tipo == STRING)
 				{
 					ptrs = 1;
