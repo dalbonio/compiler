@@ -686,7 +686,7 @@ E 			: '(' E ')'
 						$$.traducao += "\tif(tempPos >= " + start + " || tempPos < " + end + ") goto OutOfBoundsError;\n";
 						$$.traducao += "\tgoto " + after_lbl + ";\n";
 						$$.traducao += "\t" + lower_lbl + ":\n";
-						$$.traducao += "\tif(tempPos < " + start + " || tempPos >= " + end + ") goto OutOfBoundsError;\n";
+						$$.traducao += "\tif(tempPos < " + start + " || tempPos > " + end + ") goto OutOfBoundsError;\n";
 						$$.traducao += "\t" + after_lbl + ":\n";
 						//new $$ type is array $1 associated type.
 						//Ex: if $1 is int array, $$ type is int
