@@ -1191,7 +1191,7 @@ E 			: '(' E ')'
 				$$.traducao += "\t" + label_step + " = 1; //step\n";
 				$$.traducao += "\t" + $$.label + " = (" + get_tipo(arr_tipo, pointers) +  ") malloc(sizeof(" + get_tipo(arr_tipo, pointers - 1) + ") * " + $5.label + "); //alocando memoria\n\n";
 			}
-			| '<' TK_CASTING '>' '[' E ',' E ']'
+			| '{' TK_CASTING '}' '[' E ',' E ']'
 			{
 				if($5.tipo != INT)
 					yyerror("only int available to array size");
@@ -1355,24 +1355,23 @@ ATR 		: TK_ID '=' E
 				$$.traducao = $4.traducao + "\t" + $$.label + " = " + $4.label + ";\n\n";
 				//$$.resultado = $1.resultado;
 			}
-			| TK_ID '[' E ']' '=' E
+			| E '[' E ']' '=' E
 			{
-				string user_label = $1.traducao;
-				auto& lbl_umap = context_stack.back();
-				if(lbl_umap.find(user_label) == lbl_umap.end() )
-					yyerror($1.label + "not declared");
+				// string user_label = $1.traducao;
+				// auto& lbl_umap = context_stack.back();
+				// if(lbl_umap.find(user_label) == lbl_umap.end() )
+				// 	yyerror($1.label + "not declared");
+				$1.tipo = temp_umap[$1.label].tipo;
+				int ptrs = temp_umap[$1.label].ptrs;
+				int pointsTo = temp_umap[$1.label].pointsTo;
+
+				if(has_length.find($1.tipo) == has_length.end())
+					yyerror($1.label + "has not length attribute");
 
 				if($3.tipo != INT)
 					yyerror("integer expected in array set index operation");
 
-				$1.label = lbl_umap[user_label];
-				$1.tipo = temp_umap[$1.label].tipo;
-				int ptrs = temp_umap[$1.label].ptrs;
-				int pointsTo = temp_umap[$1.label].pointsTo;
 				bool hasTamanho = false;
-
-				if(has_length.find($1.tipo) == has_length.end())
-					yyerror($1.label + "has not length attribute");
 
 				//in case id has length and is declared, check if types are matching
 				if(pointsTo == temp_umap[$6.label].tipo)
@@ -1413,22 +1412,22 @@ ATR 		: TK_ID '=' E
 				//after calculating position in tempPos, attempt to insert new item in array
 				$$.traducao += "\t" + $1.label + "[tempPos] = " + $6.label + "; //inserting in position\n\n";
 			}
-			| TK_ID '[' E ',' E ']' '=' E
+			| E '[' E ',' E ']' '=' E
 			{
-				string user_label = $1.traducao;
-				auto& lbl_umap = context_stack.back();
-				if(lbl_umap.find(user_label) == lbl_umap.end() )
-					yyerror($1.label + "not declared");
+				// string user_label = $1.traducao;
+				// auto& lbl_umap = context_stack.back();
+				// if(lbl_umap.find(user_label) == lbl_umap.end() )
+				// 	yyerror($1.label + "not declared");
+
+				$1.tipo = temp_umap[$1.label].tipo;
+				int ptrs = temp_umap[$1.label].ptrs;
+				int pointsTo = temp_umap[$1.label].pointsTo;
 
 				if($3.tipo != INT)
 					yyerror("integer expected in array set index operation");
 				if($5.tipo != INT)
 					yyerror("integer expected in array set index operation");
 
-				$1.label = lbl_umap[user_label];
-				$1.tipo = temp_umap[$1.label].tipo;
-				int ptrs = temp_umap[$1.label].ptrs;
-				int pointsTo = temp_umap[$1.label].pointsTo;
 				bool hasTamanho = false;
 
 				if(has_length.find($1.tipo) == has_length.end())
