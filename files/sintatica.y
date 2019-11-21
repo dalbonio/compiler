@@ -21,10 +21,11 @@ int yylex(void);
 
 %start S
 
-%left TK_ID TK_NUM TK_REAL TK_STR TK_BOOL TK_INPUT
-%left '=' TK_CONT
+%left TK_ID TK_NUM TK_REAL TK_STR TK_BOOL TK_INPUT '#'
+%left '=' TK_CONT ':'
 %left TK_OP_LOG
 %left TK_OP_REL
+%left TK_OP_ARIT
 %left TK_NOT
 %left '+' '-'
 %left '*' '/'
@@ -765,11 +766,15 @@ E 			: '(' E ')'
 							}
 							else
 							{
-								umap_label_add_array($$.label, pointsTo, ptrs - 1);
+								umap_label_add_array($$.label, pointsTo, ptrs);
 							}
 						}
 						else
 						{
+							if($$.tipo == STRING)
+								yyerror("slicing is not allowed on strings");
+
+
 							umap_label_add($$.label, $$.tipo, true);
 						}
 
@@ -1110,41 +1115,45 @@ E 			: '(' E ')'
 
 				$$.traducao = "";
 			}
-			| E PE2 PE2
+			// | E PE2 PE2
+			// {
+			// 	cout << "complex" << $1.tipo << ", " << $2.tipo << ", " << $3.tipo << endl;
+			// 	if( $1.tipo != INT || $2.tipo != INT || $3.tipo != INT)
+			// 		yyerror("only int available to iterators");
+			//
+			// 	$$.tipo = ITERATOR;
+			// 	umap_label_add_iterator($$.label);
+			//
+			// 	string label_start = temp_umap[$$.label].start_label;
+			// 	string label_end = temp_umap[$$.label].end_label;
+			// 	string label_step = temp_umap[$$.label].step_label;
+			// 	string label_tamanho = temp_umap[$$.label].size_label;
+			//
+			// 	$$.traducao = $1.traducao + $2.traducao + $3.traducao;
+			// 	$$.traducao += string("\t") + "pEndTemp1 = " + $2.label + " - " + $1.label + ";\n";
+			// 	$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $3.label + ";\n";
+			// 	$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $3.label + ";\n";
+			// 	$$.traducao += "\tposTemp = " + $1.label + " - " + $2.label + ";\n";
+			// 	$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+			// 	$$.traducao += "\tposTemp = posTemp / " + $3.label + ";\n";
+			// 	$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+			// 	$$.traducao += "\t" + label_tamanho + " = posTemp; //tamanho\n";
+			// 	$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
+			// 	//$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
+			// 	$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
+			// 	$$.traducao += "\t" + label_step + " = " + $3.label + "; //step\n";
+			// 	$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n\n";
+			// }
+			| E ITR
 			{
-				if( $1.tipo != INT || $2.tipo != INT || $3.tipo != INT)
+				if($1.tipo != INT)
 					yyerror("only int available to iterators");
 
 				$$.tipo = ITERATOR;
 				umap_label_add_iterator($$.label);
-
-				string label_start = temp_umap[$$.label].start_label;
-				string label_end = temp_umap[$$.label].end_label;
-				string label_step = temp_umap[$$.label].step_label;
-				string label_tamanho = temp_umap[$$.label].size_label;
-
-				$$.traducao = $1.traducao + $2.traducao + $3.traducao;
-				$$.traducao += string("\t") + "pEndTemp1 = " + $2.label + " - " + $1.label + ";\n";
-				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + $3.label + ";\n";
-				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + $3.label + ";\n";
-				$$.traducao += "\tposTemp = " + $1.label + " - " + $2.label + ";\n";
-				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
-				$$.traducao += "\tposTemp = posTemp / " + $3.label + ";\n";
-				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
-				$$.traducao += "\t" + label_tamanho + " = posTemp; //tamanho\n";
-				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
-				//$$.traducao += "\t" + label_end + " = " + label_end + "; //end\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
-				$$.traducao += "\t" + label_step + " = " + $3.label + "; //step\n";
-				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n\n";
-			}
-			| E PE2
-			{
-				if($1.tipo != INT || $2.tipo != INT)
-					yyerror("only int available to iterators");
-
-				$$.tipo = ITERATOR;
-				umap_label_add_iterator($$.label);
+				cout << "end " << $2.label << ", step " << $2.resultado << endl;
+				temp_umap[$$.label].end_label = $2.label;
+				temp_umap[$$.label].step_label = $2.resultado;
 
 				string label_start = temp_umap[$$.label].start_label;
 				string label_end = temp_umap[$$.label].end_label;
@@ -1152,12 +1161,16 @@ E 			: '(' E ')'
 				string label_tamanho = temp_umap[$$.label].size_label;
 
 				$$.traducao = $1.traducao + $2.traducao;
-				$$.traducao += "\t" + label_end + " = " + $2.label + "; //end\n";
+				$$.traducao += string("\t") + "pEndTemp1 = " + label_end + " - " + $1.label + ";\n";
+				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + label_step + ";\n";
+				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + label_step + ";\n";
+				$$.traducao += "\tposTemp = " + $1.label + " - " + label_end + ";\n";
+				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+				$$.traducao += "\tposTemp = posTemp / " + label_step + ";\n";
+				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
+				$$.traducao += "\t" + label_tamanho + " = posTemp; //tamanho\n";
+				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
 				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
-				$$.traducao += "\t" + label_step + " = 1; //step\n";
-				$$.traducao += "\ttempPos = " + label_start + " - " + label_end + ";\n";
-				$$.traducao += "\tif(tempPos < 0) tempPos = tempPos * -1;\n";
-				$$.traducao += "\t" + label_tamanho + " = tempPos; //tamanho\n";
 				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n\n";
 			}
 			| '[' {} ARR_REC
@@ -1734,11 +1747,39 @@ BL_END		: TK_END
 				$$.traducao = "";
 			};
 
-PE2			: ':' E
+ITR			: ':' E ITR_REST
 			{
-				$$.label = $2.label;
-				$$.tipo = $2.tipo;
+				if($2.tipo != INT)
+					yyerror("only int available to iterators");
+
+				string label_end;
+				umap_label_add(label_end, INT);
+				$$.resultado = $3.label;
+				$$.label = label_end;
+
+				$$.traducao = $3.traducao + $2.traducao;
+				$$.traducao += "\t" + label_end + " = " + $2.label + "; //end\n";
+			};
+
+ITR_REST	: ':' E
+			{
+				if($2.tipo != INT)
+					yyerror("only int available to iterators");
+
+				string label_step;
+				umap_label_add(label_step, INT);
+				$$.label = label_step;
+
 				$$.traducao = $2.traducao;
+				$$.traducao += "\t" + label_step + " = " + $2.label + "; //step\n";
+			}
+			|
+			{
+				string label_step;
+				umap_label_add(label_step, INT);
+				$$.label = label_step;
+
+				$$.traducao = "\t" + label_step + " = 1; //step\n";
 			};
 
 %%

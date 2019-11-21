@@ -38,7 +38,7 @@ struct atributos
 {
 	string label;
 	string traducao;
-	int resultado;
+	string resultado;
 	int tipo;
 };
 

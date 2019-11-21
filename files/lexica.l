@@ -56,7 +56,7 @@ OP_LOG and|or
 
 [#(){}[\];,:?]	            { return *yytext; }
 [=!]		                { return *yytext; }
-[+\-*/]                     { yylval.traducao = yytext; return TK_OP_ARIT; }
+[+\-*/]                     { yylval.traducao = yytext; return TK_OP_ARIT; } //separar tipos por ordem, como * e / separado de + e -
 
 {OP_REL}                    { yylval.traducao = yytext; return TK_OP_REL; }
 {OP_LOG}                    { yylval.traducao = yytext; return TK_OP_LOG; }
