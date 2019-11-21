@@ -241,6 +241,10 @@ COMANDOS	: COMANDO TK_FIM_LINHA COMANDOS
 				// replace_all($2.traducao, "\n", "A");
 				// cout << $2.traducao + " 1st rule" << endl;
 			}
+			| COMANDO ';' COMANDOS
+			{
+				$$.traducao = $1.traducao + $3.traducao;
+			}
 			| TK_FIM_LINHA COMANDOS
 			{
 				$$.traducao = $2.traducao;
@@ -1042,14 +1046,12 @@ E 			: '(' E ')'
 				$$.tipo = $1.tipo;
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
-				//$$.resultado = stoi($1.traducao);
 			}
 			| TK_REAL
 			{
 				$$.tipo = $1.tipo;
 				umap_label_add($$.label, $$.tipo);
 				$$.traducao = "\t" + $$.label + " = " + $1.traducao + ";\n";
-				//$$.resultado = stoi($1.traducao);
 			}
 			| TK_BOOL
 			{
@@ -1370,7 +1372,7 @@ ATR 		: TK_ID '=' E
 				if($3.tipo != INT)
 					yyerror("integer expected in array set index operation");
 
-				if(pointsTo != temp_umap[$5.label].tipo)
+				if(pointsTo != temp_umap[$6.label].tipo)
 					yyerror("array and expression have different types");
 
 				bool hasTamanho = false;
