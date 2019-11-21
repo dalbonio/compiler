@@ -1144,33 +1144,33 @@ E 			: '(' E ')'
 			// 	$$.traducao += "\t" + label_step + " = " + $3.label + "; //step\n";
 			// 	$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n\n";
 			// }
-			| E ITR
+			| '{' E ITR
 			{
-				if($1.tipo != INT)
+				if($2.tipo != INT)
 					yyerror("only int available to iterators");
 
 				$$.tipo = ITERATOR;
 				umap_label_add_iterator($$.label);
-				cout << "end " << $2.label << ", step " << $2.resultado << endl;
-				temp_umap[$$.label].end_label = $2.label;
-				temp_umap[$$.label].step_label = $2.resultado;
+				
+				temp_umap[$$.label].end_label = $3.label;
+				temp_umap[$$.label].step_label = $3.resultado;
 
 				string label_start = temp_umap[$$.label].start_label;
 				string label_end = temp_umap[$$.label].end_label;
 				string label_step = temp_umap[$$.label].step_label;
 				string label_tamanho = temp_umap[$$.label].size_label;
 
-				$$.traducao = $1.traducao + $2.traducao;
-				$$.traducao += string("\t") + "pEndTemp1 = " + label_end + " - " + $1.label + ";\n";
+				$$.traducao = $2.traducao + $3.traducao;
+				$$.traducao += string("\t") + "pEndTemp1 = " + label_end + " - " + $2.label + ";\n";
 				$$.traducao += "\tpEndTemp2 = pEndTemp1 / " + label_step + ";\n";
 				$$.traducao += "\tpEndTemp3 = pEndTemp2 * " + label_step + ";\n";
-				$$.traducao += "\tposTemp = " + $1.label + " - " + label_end + ";\n";
+				$$.traducao += "\tposTemp = " + $2.label + " - " + label_end + ";\n";
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
 				$$.traducao += "\tposTemp = posTemp / " + label_step + ";\n";
 				$$.traducao += "\tif(posTemp < 0) posTemp = posTemp * -1;\n";
 				$$.traducao += "\t" + label_tamanho + " = posTemp; //tamanho\n";
-				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $1.label + ";\n";
-				$$.traducao += "\t" + label_start + " = " + $1.label + "; //start\n";
+				$$.traducao += "\t" + label_end + " = pEndTemp3 + " + $2.label + ";\n";
+				$$.traducao += "\t" + label_start + " = " + $2.label + "; //start\n";
 				$$.traducao += "\t" + $$.label + " = -1; //mera formalidade\n\n";
 			}
 			| '[' {} ARR_REC
@@ -1761,7 +1761,7 @@ ITR			: ':' E ITR_REST
 				$$.traducao += "\t" + label_end + " = " + $2.label + "; //end\n";
 			};
 
-ITR_REST	: ':' E
+ITR_REST	: ':' E '}'
 			{
 				if($2.tipo != INT)
 					yyerror("only int available to iterators");
@@ -1773,7 +1773,7 @@ ITR_REST	: ':' E
 				$$.traducao = $2.traducao;
 				$$.traducao += "\t" + label_step + " = " + $2.label + "; //step\n";
 			}
-			|
+			| '}'
 			{
 				string label_step;
 				umap_label_add(label_step, INT);
