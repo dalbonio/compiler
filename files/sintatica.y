@@ -1200,7 +1200,6 @@ E 			: '(' E ')'
 						yyerror("only int available to array size");
 
 				int arr_tipo = tipo_umap_str[$2.label];
-				if(arr_tipo)
 				$$.tipo = ARRAY; //change to matrix
 				int pointers = 1;
 				if(arr_tipo == STRING)
@@ -1371,6 +1370,9 @@ ATR 		: TK_ID '=' E
 				if($3.tipo != INT)
 					yyerror("integer expected in array set index operation");
 
+				if(pointsTo != temp_umap[$5.label].tipo)
+					yyerror("array and expression have different types");
+
 				bool hasTamanho = false;
 
 				//in case id has length and is declared, check if types are matching
@@ -1427,6 +1429,9 @@ ATR 		: TK_ID '=' E
 					yyerror("integer expected in array set index operation");
 				if($5.tipo != INT)
 					yyerror("integer expected in array set index operation");
+
+				if(pointsTo != temp_umap[$8.label].tipo)
+					yyerror("matrix and expression have different types");
 
 				bool hasTamanho = false;
 
