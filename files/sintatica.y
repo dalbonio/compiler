@@ -186,6 +186,7 @@ BL_CASE_INT	: TK_CASE REC_NUM COMANDOS BL_CASE_INT
 				$$.traducao += "\tgoto " + cmd_label_end_generator("SWITCH") + ";\n";
 				$$.traducao += "\n/**/\n\t" + cmd_label_generator("SWITCH") + ":\n";
 				$$.traducao += $3.traducao;
+				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
 				$$.traducao += "\t" + cmd_label_end_generator("SWITCH") + ":\n\n/**/\n";
 				$$.traducao += $4.traducao;
 				switchLabelContador++;
@@ -204,6 +205,7 @@ BL_CASE_STR	: TK_CASE REC_STR COMANDOS BL_CASE_STR
 				$$.traducao += "\tgoto " + cmd_label_end_generator("SWITCH") + ";\n";
 				$$.traducao += "\n/**/\n\t" + cmd_label_generator("SWITCH") + ":\n";
 				$$.traducao += $3.traducao;
+				$$.traducao += "\tgoto " + cmd_label_end_generator() + ";\n";
 				$$.traducao += "\t" + cmd_label_end_generator("SWITCH") + ":\n\n/**/\n";
 				$$.traducao += $4.traducao;
 				switchLabelContador++;
