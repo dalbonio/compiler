@@ -36,6 +36,7 @@ string declare_variables()
 	string total = string("");
 
 	//comments to help in intermediate code read
+	//show the match between written variable and temp variable
 	for(int i = context_stack.size() - 1; i >= 0 ; i--)
 	{
 		for(auto it = context_stack[i].begin(); it != context_stack[i].end(); it++)
