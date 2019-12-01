@@ -15,7 +15,7 @@ int yylex(void);
 %token TK_BREAK TK_CONTINUE
 %token TK_CASTING
 %token TK_VAR
-%token TK_FIM TK_ERROR
+%token TK_FIM TK_ERROR TK_RETURN
 %token TK_FIM_LINHA
 %token TK_SWITCH TK_CASE TK_DEFAULT TK_GLOBAL TK_LOOPEACH TK_IN
 
@@ -36,16 +36,17 @@ int yylex(void);
 
 %%
 
-S 			: BP //bloco principal
+S 			: FUNCTS BP //bloco principal
 			{
 				cout << "#include <iostream>\n#include<string.h>\n#include<stdio.h>\n";
-				cout << "using namespace std;";
+				cout << "using namespace std;\n\n";
+				cout << $1.traducao;
 				cout <<	"\nint main(void)\n{\n";
 				cout << "\tchar* buffer;\n";
 				cout << declare_variables();
 				cout << "\tgoto Start;\n";
 				cout << outOfBoundsError();
-				cout << "\tStart: \n" << $1.traducao << "\n\tEnd_Of_Stream:\n\treturn 0;\n}" << endl;
+				cout << "\tStart: \n" << $2.traducao << "\n\tEnd_Of_Stream:\n\treturn 0;\n}" << endl;
 			}
 			;
 
@@ -63,6 +64,72 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 			}
 			;
 
+
+FUNCTS		: FUNCT FUNCTS
+			{
+				$$.traducao = $1.traducao + $2.traducao;
+			}	
+			|//vazio
+			{
+				$$.traducao = "";
+			};
+
+
+REC_PARAM	: TK_CASTING TK_ID ',' PARAM_FUNCT
+			{
+				int tipo = tipo_umap_str[$1.label];
+				param_declr.push(tipo);
+
+				$$.traducao = tipo_umap[tipo] + " " + $2.traducao + ", " + $4.traducao; 
+			}
+			| TK_CASTING TK_ID
+			{
+				int tipo = tipo_umap_str[$1.label];
+				param_declr.push(tipo);
+
+				$$.traducao = tipo_umap[tipo] + " " + $2.traducao;
+			};
+
+PARAM_FUNCT	: REC_PARAM
+			{
+				$$.traducao = $1.traducao;	
+			}
+			|
+			{
+				$$.traducao = "";
+			};
+
+FUNCT		: TK_CASTING TK_ID '(' PARAM_FUNCT ')' BL_FUNCT
+			{
+				int tipo = tipo_umap_str[$1.label];
+				cout << $1.label << endl << tipo << endl << $6.tipo << endl;
+				if(tipo != $6.tipo)
+				{
+					yyerror("tipo de retorno inicial diferente do tipo de retorno da funcao");
+				}
+				
+				if(funct_umap.find($2.traducao) != funct_umap.end())
+				{
+					yyerror("funcao de mesmo nome já declarada");
+				}
+
+				string funct_label = funct_label_generator();
+
+				funct_umap[$2.traducao] = funct_label;
+				param_funct_umap[funct_label] = param_declr;
+
+				emptying_queue(param_declr);
+
+				//print_queue(param_declr);
+				$$.traducao = tipo_umap[tipo] + " " + funct_label + "(" + $4.traducao + ")" + $6.traducao; 
+			};
+
+
+BL_FUNCT	: TK_DO TK_FIM_LINHA COMANDOS TK_RETURN E TK_FIM_LINHA BL_END
+			{
+				$$.tipo = $5.tipo; //tipo do retorno
+				$$.traducao = "\n{\n" + $3.traducao + $5.traducao + "\n\treturn " + $5.label + ";\n}\n";
+			};		
 
 BL_IF		: TK_DO COMANDOS BL_ELSE
 			{
@@ -1254,7 +1321,66 @@ E 			: '(' E ')'
 
 				$$.traducao += "\t" + $$.label + " = (" + get_tipo(arr_tipo, pointers) +  ") malloc(sizeof(" + get_tipo(arr_tipo, pointers - 1) + ") * " + label_tamanho + "); //alocando memoria\n\n";
 			}
+			| TK_ID '(' ARG_FUNCT ')'//chamada de funcao
+			{
+				if(funct_umap.find($1.traducao) == funct_umap.end())
+				{
+					yyerror("funcao nao declarada");
+				}
+
+				string funct_label = funct_umap[$1.traducao];
+				queue<int> funct_param = param_funct_umap[funct_label];
+
+				if(funct_param.size() != param_use.size())
+				{
+					yyerror("quantidade de parametros nao coincide com o que a funcao precisa");
+				}
+
+				int param_pos = 1;
+
+				for(int i = funct_param.size(); i >= 0; i--)
+				{
+					if(funct_param.front() != param_use.front())
+					{
+						yyerror("o tipo do parametro " + to_string(param_pos) + " nao coincide com o que foi declarado na funcao");
+					}
+					else
+					{
+						funct_param.pop();
+						param_use.pop();
+					}
+
+					param_pos++;
+				}
+
+				//$$.label = funct_label;
+				$$.traducao = $3.traducao + "\t" + funct_label + "(" + $3.label + ");\n";
+			}
 			;
+
+ARG_FUNCT 	: REC_E
+			{
+				$$.label = $1.label;
+				$$.traducao = $1.traducao;
+			}
+			|
+			{
+				$$.label = "";
+				$$.traducao = "";
+			}
+
+REC_E		: E ',' REC_E
+			{
+				param_use.push($1.tipo);
+				$$.traducao = $1.traducao + $3.traducao;
+				$$.label = $1.label + "," + $3.label;
+			}
+			| E
+			{
+				param_use.push($1.tipo);
+				$$.traducao = $1.traducao;
+				$$.label = $1.label;
+			};
 
 ATR 		: TK_ID '=' E
 			{
@@ -1553,7 +1679,7 @@ DCLR		: TK_CASTING TK_ID
 				int ptrs = 0;
 				int pointsTo = 0;
 
-				if(tipo != $4.tipo)//por enquanto
+				if(tipo != $4.tipo)//por enquanto == forever
 				{
 					yyerror("DCLR -> TK_CASTING TK_ID '=' E\ncoercao nao permitida");
 				}

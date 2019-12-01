@@ -1,2 +1,5 @@
-input()
-input()
+string function(string a) do
+    return a
+end
+
+function()

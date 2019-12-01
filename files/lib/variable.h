@@ -35,6 +35,11 @@ unordered_map<int, bool> has_length;
 
 vector<vector<string>> array_lbl_vector;
 
+unordered_map<string, string> funct_umap;
+unordered_map<string, queue<int>> param_funct_umap;
+queue<int> param_declr;
+queue<int> param_use;
+
 string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 
 int tokenContador = 0;
@@ -44,12 +49,15 @@ int strLabelCounter = 0;
 int sliceLabelCounter = 0;
 
 //stack <string> labels_if;
+
 int ifLabelContador = 0;
 int switchLabelContador = 0;
-//string if_condition = "";
 
+//string if_condition = "";
 int contadorIfsToBreak = 0;
+
 //it works to not push 2 context when dealing with loops
 int ctxPushReseter = 0;
+int funct_counter = 0;
 
 #endif

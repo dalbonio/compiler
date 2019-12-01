@@ -780,5 +780,21 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 	return op_translate;
 }
 
+string funct_label_generator()
+{
+	return string("funct_") + to_string(funct_counter++);
+}
+
+void emptying_queue(queue<int> Q)
+{
+	while(!Q.empty())
+	{
+		//cout<<" "<<Q.front();
+		Q.pop();
+	}
+
+	//cout<<endl;
+}
+
 #endif
 //IRMAO OLHA O TAMANHO DAS STRINGS VINDAS DE DOUBLE E DE INT
