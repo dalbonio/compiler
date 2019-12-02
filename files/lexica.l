@@ -32,6 +32,7 @@ OP_LOG and|or
 "loop"		                { cmdLabelContador++; return TK_LOOP; }
 "for"		                { pushContext(); ctxPushReseter = 1; return TK_FOR; }
 "loopeach"		            { pushContext(); ctxPushReseter = 1; return TK_LOOPEACH; }
+"def"                       { pushContext(); ctxPushReseter = 1; return TK_DEF; }
 "if"		                { return TK_IF; }
 "else"                      { context_stack.pop_back(); return TK_ELSE; }
 "elif"						{ context_stack.pop_back(); return TK_ELSEIF; }
@@ -44,10 +45,9 @@ OP_LOG and|or
 "in"					    { return TK_IN; }
 "global"                    { return TK_GLOBAL; }
 "var"                       { return TK_VAR; }
+"return"                    { return TK_RETURN; }
 "break"                     { return TK_BREAK; }
 "continue"                  { return TK_CONTINUE; }
-"return"                    { return TK_RETURN; }
-
 "++"                        { return TK_INCR; }
 "--"                        { return TK_DECR; }
 "+="		                { yylval.traducao = yytext; return TK_CONT; }

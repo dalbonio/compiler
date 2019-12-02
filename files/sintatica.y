@@ -14,7 +14,7 @@ int yylex(void);
 %token TK_FOR TK_WHILE TK_IF TK_END TK_DO TK_LOOP TK_ELSEIF TK_ELSE
 %token TK_BREAK TK_CONTINUE
 %token TK_CASTING
-%token TK_VAR
+%token TK_VAR TK_DEF
 %token TK_FIM TK_ERROR TK_RETURN
 %token TK_FIM_LINHA
 %token TK_SWITCH TK_CASE TK_DEFAULT TK_GLOBAL TK_LOOPEACH TK_IN
@@ -64,11 +64,16 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 			}
 			;
 
+FUN			: TK_DEF FUNCT
+			{
+				$$.traducao = $1.traducao;
+			}
 
-FUNCTS		: FUNCT FUNCTS
+
+FUNCTS		: FUN FUNCTS
 			{
 				$$.traducao = $1.traducao + $2.traducao;
-			}	
+			}
 			|//vazio
 			{
 				$$.traducao = "";
@@ -78,21 +83,39 @@ FUNCTS		: FUNCT FUNCTS
 REC_PARAM	: TK_CASTING TK_ID ',' PARAM_FUNCT
 			{
 				int tipo = tipo_umap_str[$1.label];
+				
 				param_declr.push(tipo);
+				int ptrs = 0;
+				int pointsTo = 0;
+				if(tipo == STRING)
+				{
+					ptrs = 1;
+				}
+				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+				temp_umap[$2.label].tipo = tipo;
 
-				$$.traducao = tipo_umap[tipo] + " " + $2.traducao + ", " + $4.traducao; 
+				$$.traducao = tipo_umap[tipo] + " " + $2.traducao + ", " + $4.traducao;
 			}
 			| TK_CASTING TK_ID
 			{
 				int tipo = tipo_umap_str[$1.label];
 				param_declr.push(tipo);
 
+				int ptrs = 0;
+				int pointsTo = 0;
+				if(tipo == STRING)
+				{
+					ptrs = 1;
+				}
+				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+				temp_umap[$2.label].tipo = tipo;
+
 				$$.traducao = tipo_umap[tipo] + " " + $2.traducao;
 			};
 
 PARAM_FUNCT	: REC_PARAM
 			{
-				$$.traducao = $1.traducao;	
+				$$.traducao = $1.traducao;
 			}
 			|
 			{
@@ -107,7 +130,7 @@ FUNCT		: TK_CASTING TK_ID '(' PARAM_FUNCT ')' BL_FUNCT
 				{
 					yyerror("tipo de retorno inicial diferente do tipo de retorno da funcao");
 				}
-				
+
 				if(funct_umap.find($2.traducao) != funct_umap.end())
 				{
 					yyerror("funcao de mesmo nome já declarada");
@@ -121,15 +144,20 @@ FUNCT		: TK_CASTING TK_ID '(' PARAM_FUNCT ')' BL_FUNCT
 				emptying_queue(param_declr);
 
 				//print_queue(param_declr);
-				$$.traducao = tipo_umap[tipo] + " " + funct_label + "(" + $4.traducao + ")" + $6.traducao; 
+				$$.traducao = tipo_umap[tipo] + " " + funct_label + "(" + $4.traducao + ")" + $6.traducao;
 			};
 
 
-BL_FUNCT	: TK_DO TK_FIM_LINHA COMANDOS TK_RETURN E TK_FIM_LINHA BL_END
+BL_FUNCT	: TK_DO TK_FIM_LINHA COMANDOS RTRN TK_FIM_LINHA BL_END
 			{
 				$$.tipo = $5.tipo; //tipo do retorno
-				$$.traducao = "\n{\n" + $3.traducao + $5.traducao + "\n\treturn " + $5.label + ";\n}\n";
-			};		
+				$$.traducao = "\n{\n" + $3.traducao + $4.traducao + "\n\treturn " + $4.label + ";\n}\n";
+			};
+
+RTRN		: TK_RETURN E
+			{
+				$$.traducao = $2.traducao;
+			}
 
 BL_IF		: TK_DO COMANDOS BL_ELSE
 			{
@@ -1161,6 +1189,7 @@ E 			: '(' E ')'
 			| TK_ID
 			{
 				$$.label = get_current_context_id_label($1.traducao);
+				cout << $$.label << "   " << $1.traducao << endl;
 				//cout << $$.label << endl;
 				$$.tipo = temp_umap[$$.label].tipo;
 				//cout << $$.label << $$.tipo;
@@ -1220,7 +1249,7 @@ E 			: '(' E ')'
 
 				$$.tipo = ITERATOR;
 				umap_label_add_iterator($$.label);
-				
+
 				temp_umap[$$.label].end_label = $3.label;
 				temp_umap[$$.label].step_label = $3.resultado;
 
