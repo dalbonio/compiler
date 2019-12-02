@@ -46,6 +46,7 @@ OP_LOG and|or
 "var"                       { return TK_VAR; }
 "break"                     { return TK_BREAK; }
 "continue"                  { return TK_CONTINUE; }
+"return"                    { return TK_RETURN; }
 
 "++"                        { return TK_INCR; }
 "--"                        { return TK_DECR; }

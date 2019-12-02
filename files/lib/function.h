@@ -5,42 +5,7 @@
 #include "header.h"
 #include "variable.h"
 
-void yyerror(string);
-string label_generator();
-string declare_variables();
-void initialize_tipo_umap();
-void initialize_op_umap();
-void replace_all(std::string& data, std::string toSearch, std::string replaceStr);
-
-void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false);
-void umap_label_add_iterator(string& new_label, int qtd_ptrs = 0);
-void umap_label_add_array(string& new_label, int tipo, int qtd_ptrs = 0);
-void umap_label_add_matrix(string& new_label, int tipo, int qtd_ptrs = 0);
-string search_variable(string var_name);
-string get_current_context_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = NIL);
-string get_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = NIL);
-string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false);
-void initialize_proc_temp_umap();
-int get_new_type(atributos atr_1, atributos atr_2, atributos atr_3);
-string genCountStrLabelStart();
-string genCountStrLabelEnd();
-void pushContext();
-void endContext();
-string countStringProc();
-string outOfBoundsError();
-void set_error_matrix();
-void set_int_double_matrix();
-void initialize_matrix();
-string string_to_double(string str_label, string double_label);
-string string_to_int(string str_label, string int_label);
-string get_tipo(int tipo, int qtd_ptr = 0);
-
-string cmd_label_generator(string cmd_name = "CMD", int desloc = 0);
-string cmd_label_end_generator(string cmd_name = "CMD", int desloc = 0);
-string cmd_label_iter_generator(int desloc = 0);
-string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type);
-
-void yyerror( string MSG )
+void yyerror(string MSG)
 {
 	cout << "\n---\n" << "linha " << contadorLinha << ": " << MSG << "\n---\n";
 	exit (0);
@@ -51,11 +16,27 @@ string label_generator()
 	return string("temp") + to_string(tokenContador++);
 }
 
+string get_tipo(int tipo, int qtd_ptr = 0)
+{
+
+	if(qtd_ptr > 0)
+	{
+		string ptrs = "";
+		for(int i = 0; i < qtd_ptr; i++){
+			ptrs += "*";
+		}
+		return tipo_umap[tipo] + ptrs;
+	}
+
+	return tipo_umap[tipo];
+}
+
 string declare_variables()
 {
 	string total = string("");
 
 	//comments to help in intermediate code read
+	//show the match between written variable and temp variable
 	for(int i = context_stack.size() - 1; i >= 0 ; i--)
 	{
 		for(auto it = context_stack[i].begin(); it != context_stack[i].end(); it++)
@@ -156,7 +137,7 @@ void initialize_op_umap()
 	op_umap_str["or"] = OR;
 }
 
-void replace_all(std::string & data, std::string toSearch, std::string replaceStr)
+void replace_all(std::string& data, std::string toSearch, std::string replaceStr)
 {
 	// Get the first occurrence
 	size_t pos = data.find(toSearch);
@@ -171,7 +152,7 @@ void replace_all(std::string & data, std::string toSearch, std::string replaceSt
 	}
 }
 
-void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
+void umap_label_add(string& new_label, int new_tipo, bool hasTamanho = false)
 {
 	new_label = label_generator();
 	variavel new_var;
@@ -204,7 +185,7 @@ void umap_label_add(string& new_label, int new_tipo, bool hasTamanho)
 	//cout << "label: " << new_label << " size_label: " << temp_umap[new_label].size_label << endl;
 }
 
-void umap_label_add_iterator(string& new_label, int qtd_ptrs)
+void umap_label_add_iterator(string& new_label, int qtd_ptrs = 0)
 {
 	new_label = label_generator();
 	variavel new_var;
@@ -233,7 +214,7 @@ void umap_label_add_iterator(string& new_label, int qtd_ptrs)
 	temp_umap[new_label] = new_var;
 }
 
-void umap_label_add_array(string& new_label, int points_to, int qtd_ptrs)
+void umap_label_add_array(string& new_label, int points_to, int qtd_ptrs = 0)
 {
 	new_label = label_generator();
 	variavel new_var;
@@ -263,7 +244,7 @@ void umap_label_add_array(string& new_label, int points_to, int qtd_ptrs)
 	temp_umap[new_label] = new_var;
 }
 
-void umap_label_add_matrix(string& new_label, int points_to, int qtd_ptrs)
+void umap_label_add_matrix(string& new_label, int points_to, int qtd_ptrs = 0)
 {
 	new_label = label_generator();
 	variavel new_var;
@@ -335,7 +316,7 @@ string search_variable_cur_ctx(string var_name)
 	return "0";
 }
 
-string get_current_context_id_label(string user_label, int fixed, int ptrs, int pointsTo)
+string get_current_context_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = 0)
 {
 	auto& lbl_umap = context_stack.back();
 	if(lbl_umap.find(user_label) == lbl_umap.end() )
@@ -357,7 +338,7 @@ string get_current_context_id_label(string user_label, int fixed, int ptrs, int 
 	return lbl_umap[user_label];
 }
 
-string get_id_label(string user_label, int fixed, int ptrs, int pointsTo)
+string get_id_label(string user_label, int fixed = 0, int ptrs = 0, int pointsTo = 0)
 {
 	auto& lbl_umap = context_stack.back();
 	string label = search_variable(user_label);
@@ -377,7 +358,7 @@ string get_id_label(string user_label, int fixed, int ptrs, int pointsTo)
 	return label;
 }
 
-string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho)
+string add_variable_in_current_context(string var_name, int tipo, bool hasTamanho = false)
 {
 	auto cur_umap = context_stack.back();
 	string new_label;
@@ -657,7 +638,7 @@ string int_to_string(string int_label, string str_label)
 	return command1 + command2;
 }
 
-string cmd_label_generator(string cmd_name, int desloc)
+string cmd_label_generator(string cmd_name = "CMD", int desloc = 0)
 {
 	string label_name = cmd_name + string("_");
 
@@ -681,14 +662,14 @@ string cmd_label_generator(string cmd_name, int desloc)
 	return label_name;
 }
 
-string cmd_label_iter_generator(int desloc)
+string cmd_label_iter_generator(int desloc = 0)
 {
 	string label_name = string("CMD_ITER_");
 	label_name += to_string(cmdLabelContador - desloc);
 	return label_name;
 }
 
-string cmd_label_end_generator(string cmd_name,  int desloc)
+string cmd_label_end_generator(string cmd_name = "CMD", int desloc = 0)
 {
 	string label_end_name = cmd_name + string("_END_");
 
@@ -710,21 +691,6 @@ string cmd_label_end_generator(string cmd_name,  int desloc)
 	}
 
 	return label_end_name;
-}
-
-string get_tipo(int tipo, int qtd_ptr)
-{
-
-	if(qtd_ptr > 0)
-	{
-		string ptrs = "";
-		for(int i = 0; i < qtd_ptr; i++){
-			ptrs += "*";
-		}
-		return tipo_umap[tipo] + ptrs;
-	}
-
-	return tipo_umap[tipo];
 }
 
 string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, atributos atr_3, int final_type)
@@ -812,6 +778,22 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
 	replace_all(op_translate, "operator", op_umap[op]);
 
 	return op_translate;
+}
+
+string funct_label_generator()
+{
+	return string("funct_") + to_string(funct_counter++);
+}
+
+void emptying_queue(queue<int> Q)
+{
+	while(!Q.empty())
+	{
+		//cout<<" "<<Q.front();
+		Q.pop();
+	}
+
+	//cout<<endl;
 }
 
 #endif
