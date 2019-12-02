@@ -1,5 +1,6 @@
-string function(string a) do
+def string function(string a) do
+    print("#fe")
     return a
 end
 
-function()
+function("a")
