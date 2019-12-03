@@ -3,4 +3,15 @@ def string function(string a) do
     return a
 end
 
-function("a")
+def int fun() do
+	a = 0
+    loop(a < 10) do
+        print(global a)
+        global a = global a + 1
+    end
+    return 0
+end
+
+b = function("doend e nota 10")
+fun()
+print(b)

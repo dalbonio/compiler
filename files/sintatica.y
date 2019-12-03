@@ -33,6 +33,7 @@ int yylex(void);
 %left TK_INCR TK_DECR
 %left TK_GLOBAL
 %left '(' ')'
+%left TK_DEF
 
 %%
 
@@ -65,16 +66,19 @@ BLOCO		: TK_DO TK_FIM_LINHA COMANDOS BL_END
 			;
 
 
-FUNCTS		: FUN FUNCTS
+FUNCTS		: FUN TK_FIM_LINHA FUNCTS
 			{
 				//cout << $1.traducao;
-				$$.traducao = $1.traducao + $2.traducao;
+				$$.traducao = $1.traducao + $3.traducao;
+			}
+			| TK_FIM_LINHA FUNCTS
+			{
+				$$.traducao = $2.traducao;
 			}
 			|//vazio
 			{
 				$$.traducao = "";
 			};
-
 
 
 FUN			: TK_DEF FUNCT
@@ -95,6 +99,7 @@ REC_PARAM	: TK_CASTING TK_ID ',' PARAM_FUNCT
 					ptrs = 1;
 				}
 				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+
 				temp_umap[$2.label].tipo = tipo;
 
 				$$.traducao = get_tipo(tipo, ptrs) + " " + $2.label + ", " + $4.traducao;
@@ -111,6 +116,7 @@ REC_PARAM	: TK_CASTING TK_ID ',' PARAM_FUNCT
 					ptrs = 1;
 				}
 				$2.label = get_current_context_id_label($2.traducao, 1, ptrs, pointsTo);
+
 				temp_umap[$2.label].tipo = tipo;
 
 				$$.traducao = get_tipo(tipo, ptrs) + " " + $2.label;
@@ -118,9 +124,15 @@ REC_PARAM	: TK_CASTING TK_ID ',' PARAM_FUNCT
 
 PARAM_FUNCT	: REC_PARAM
 			{
+				for(auto it = temp_umap.begin(); it != temp_umap.end(); it++)
+				{
+					//copia os parametros que estavam salvos em temp_umap
+					param_umap[it->first] = it->second;
+				}	
+
 				$$.traducao = $1.traducao;
 			}
-			|
+			|//vazio
 			{
 				$$.traducao = "";
 			};
@@ -134,7 +146,7 @@ FUNCT		: TK_CASTING TK_ID '(' PARAM_FUNCT ')' BL_FUNCT
 				{
 					ptrs = 1;
 				}
-				//cout << $1.label << endl << tipo << endl << $6.tipo << endl;
+
 				if(tipo != $6.tipo)
 				{
 					yyerror("tipo de retorno inicial diferente do tipo de retorno da funcao");
@@ -148,19 +160,31 @@ FUNCT		: TK_CASTING TK_ID '(' PARAM_FUNCT ')' BL_FUNCT
 				string funct_label = funct_label_generator();
 
 				funct_umap[$2.traducao] = funct_label;
+				funct_return_umap[funct_label] = tipo;
 				param_funct_umap[funct_label] = param_declr;
 
-				emptying_queue(param_declr);
+				//cout << "PARAM: " << param_declr.size() << endl;
+				emptying_queue(param_declr);//esvazia
+				param_declr = queue<int>();//limpa
+				//cout << "PARAMEMP: " << param_declr.size() << endl;
 
-				//print_queue(param_declr);
 				$$.traducao = get_tipo(tipo, ptrs) + " " + funct_label + "(" + $4.traducao + ")" + $6.traducao;
 			};
 
 
 BL_FUNCT	: TK_DO TK_FIM_LINHA COMANDOS RTRN TK_FIM_LINHA BL_END
 			{
+				//remove os parametros do mapa de temporarias, para nao haver declaracao
+				removing_match_umap(param_umap, temp_umap); 
+				
+				string declare = declare_function_variables();
+
+				//remove as variaveis do mapa, para poder usar na proxima funcao
+				param_umap.clear();
+				temp_umap.clear();
+
 				$$.tipo = $4.tipo; //tipo do retorno
-				$$.traducao = "\n{\n" + $3.traducao + $4.traducao + ";\n}\n";
+				$$.traducao = "\n{\n" + declare + $3.traducao + $4.traducao + ";\n}\n";
 			};
 
 RTRN		: TK_RETURN E
@@ -1372,33 +1396,45 @@ E 			: '(' E ')'
 
 				if(funct_param.size() != param_use.size())
 				{
+					//cout << funct_param.size() << endl << param_use.size() << endl;
 					yyerror("quantidade de parametros nao coincide com o que a funcao precisa");
 				}
 
 				int param_pos = 1;
 
-				for(int i = funct_param.size(); i >= 0; i--)
+				if(funct_param.size() != 0)
 				{
-					if(funct_param.front() != param_use.front())
+					for(int i = funct_param.size(); i >= 0; i--)
 					{
-						yyerror("o tipo do parametro " + to_string(param_pos) + " nao coincide com o que foi declarado na funcao");
-					}
-					else
-					{
-						funct_param.pop();
-						param_use.pop();
+						if(funct_param.front() != param_use.front())
+						{
+							yyerror("o tipo do parametro " + to_string(param_pos) + " nao coincide com o que foi declarado na funcao");
+						}
+						else
+						{
+							funct_param.pop();
+							param_use.pop();
+						}
+
+						param_pos++;
 					}
 
-					param_pos++;
+					param_use = queue<int>();//clear queue
 				}
+				//cout << "USE: " << param_use.size() << endl;
 
-				//$$.label = funct_label;
-				$$.traducao = $3.traducao + "\t" + funct_label + "(" + $3.label + ");\n";
+				int tipo = funct_return_umap[funct_label];
+				umap_label_add($$.label, tipo, tipo == STRING);
+
+				$$.tipo = tipo;
+				//$$.label = new_label;
+				$$.traducao = $3.traducao + "\t" + $$.label + " = " + funct_label + "(" + $3.label + ");\n";
 			}
 			;
 
 ARG_FUNCT 	: REC_E
 			{
+				//cout << "USE: " << param_use.size() << endl;	
 				$$.label = $1.label;
 				$$.traducao = $1.traducao;
 			}

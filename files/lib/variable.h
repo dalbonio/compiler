@@ -36,9 +36,12 @@ unordered_map<int, bool> has_length;
 vector<vector<string>> array_lbl_vector;
 
 unordered_map<string, string> funct_umap;
+unordered_map<string, int> funct_return_umap;
 unordered_map<string, queue<int>> param_funct_umap;
 queue<int> param_declr;
 queue<int> param_use;
+
+unordered_map<string, variavel> param_umap;
 
 string matrix[QTD_OPERATORS + 1][QTD_TYPES + 1][QTD_TYPES + 1];
 

@@ -290,3 +290,24 @@ string types_operations(atributos& atr_main, atributos atr_1, atributos atr_2, a
         realiza as operacoes logicas
         realiza as operacoes relacionais
 */
+
+string funct_label_generator();
+/*
+    retorna a label da funcao usando o valor de functCounter
+*/
+
+void emptying_queue(queue<int>& Q);
+/*
+    esvazia a fila
+*/
+
+string declare_function_variables();
+/*
+    declara as variaveis usadas dentro do contexto da funcao
+    os parametros são desconsiderados por logica aplicada na regra utilizadora dessa funcao
+*/
+
+void removing_match_umap(unordered_map<string, variavel>& iterator_umap, unordered_map<string, variavel>& toEmpty_umap);
+/*
+    esvazia o mapa toEmpty_umap para todas as chaves do iterator_umap
+*/

@@ -785,7 +785,7 @@ string funct_label_generator()
 	return string("funct_") + to_string(funct_counter++);
 }
 
-void emptying_queue(queue<int> Q)
+void emptying_queue(queue<int>& Q)
 {
 	while(!Q.empty())
 	{
@@ -793,7 +793,46 @@ void emptying_queue(queue<int> Q)
 		Q.pop();
 	}
 
+	//cout << Q.size();
+
 	//cout<<endl;
+}
+
+string declare_function_variables()
+{
+	string total = string("");
+
+	for(auto it = temp_umap.begin(); it != temp_umap.end(); it++)
+	{
+		//cout << it -> first << endl;
+		if(it->second.tipo == 0)
+		{
+			it->second.tipo = INT;
+		}
+		string tipo;
+		if(it->second.tipo != ARRAY)
+		{
+			tipo = get_tipo(it->second.tipo, it->second.ptrs);
+		}
+		else
+		{
+			tipo = get_tipo(it->second.pointsTo, it->second.ptrs);
+		}
+
+		total += "\t" + tipo + " " + it->first + ";\n";
+	}
+
+	total += "\n";
+
+	return total;
+}
+
+void removing_match_umap(unordered_map<string, variavel>& iterator_umap, unordered_map<string, variavel>& toEmpty_umap)
+{
+	for(auto it = iterator_umap.begin(); it != iterator_umap.end(); it++)
+	{
+		toEmpty_umap.erase(it->first);
+	}
 }
 
 #endif
