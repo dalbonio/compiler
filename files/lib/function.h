@@ -835,5 +835,23 @@ void removing_match_umap(unordered_map<string, variavel>& iterator_umap, unorder
 	}
 }
 
+string free_variables()
+{
+	string total = string("");
+
+	for(auto it = temp_umap.begin(); it != temp_umap.end(); it++)
+	{
+		if(it->second.ptrs > 0)
+		{
+			total += string("\t") + "free(" + it->first + ");\n";
+			total += "\t" + it->first + " = NULL;\n";
+		}
+	}
+
+	total += "\n";
+
+	return total;
+}
+
 #endif
 //IRMAO OLHA O TAMANHO DAS STRINGS VINDAS DE DOUBLE E DE INT

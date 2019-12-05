@@ -46,6 +46,7 @@ S 			: FUNCTS BP //bloco principal
 				cout << "\tchar* buffer;\n";
 				cout << declare_variables();
 				cout << "\tgoto Start;\n";
+				//cout << free_variables();
 				cout << outOfBoundsError();
 				cout << "\tStart: \n" << $2.traducao << "\n\tEnd_Of_Stream:\n\treturn 0;\n}" << endl;
 			}
@@ -768,7 +769,6 @@ E 			: '(' E ')'
 					string step = temp_umap[$2.label].step_label;
 					string size = temp_umap[$2.label].size_label;
 					string end = temp_umap[$2.label].end_label;
-
 					int isMat = temp_umap[$2.label].isMat;
 					if(isMat == 0)
 					{
@@ -1498,9 +1498,10 @@ ATR 		: TK_ID '=' E
 						$$.label = add_iterator_in_current_context($1.traducao);
 					}
 				}
-				else if(temp_umap[$1.label].fixed == 1)
+				else if(temp_umap[$1.label].fixed == 1 && temp_umap[$1.label].tipo != $3.tipo)
 				{
-					//conversao implicita
+					//conversao implicita erro
+					yyerror("tipo fixado diferente do atribuido");
 				}
 				else
 				{
